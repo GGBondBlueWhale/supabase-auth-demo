@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>Supabase 登录 Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      max-width: 480px;
+      margin: 40px auto;
+      padding: 0 16px;
+    }
+    h1 { font-size: 24px; margin-bottom: 8px; }
+    h2 { font-size: 18px; margin-top: 24px; }
+    label { display: block; margin-top: 8px; }
+    input {
+      width: 100%;
+      padding: 8px;
+      margin-top: 4px;
+      box-sizing: border-box;
+    }
+    button {
+      margin-top: 12px;
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+    .card {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 16px;
+    }
+    #status {
+      margin-top: 12px;
+      color: #d9534f;
+      min-height: 1em;
+    }
+    #current-user {
+      margin-top: 8px;
+      font-size: 14px;
+      color: #333;
+      word-break: break-all;
+    }
+  </style>
+</head>
+<body>
+  <h1>Supabase 登录 Demo</h1>
+  <p>前端：GitHub Pages 静态页面<br>后端：Supabase Auth (Email + Password)</p>
+
+  <div class="card">
+    <h2>注册 (Sign Up)</h2>
+    <form id="signup-form">
+      <label>
+        Email
+        <input type="email" id="signup-email" required />
+      </label>
+      <label>
+        Password
+        <input type="password" id="signup-password" required minlength="6" />
+      </label>
+      <button type="submit">注册</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>登录 (Sign In)</h2>
+    <form id="login-form">
+      <label>
+        Email
+        <input type="email" id="login-email" required />
+      </label>
+      <label>
+        Password
+        <input type="password" id="login-password" required />
+      </label>
+      <button type="submit">登录</button>
+    </form>
+    <button id="logout-btn" style="display:none;">退出登录 (Sign Out)</button>
+    <div id="status"></div>
+    <div id="current-user"></div>
+  </div>
+
+  <!-- 所有 Supabase 逻辑放在 auth.js 里 -->
+  <script type="module" src="./auth.js"></script>
+</body>
+</html>
