@@ -14,6 +14,8 @@ const unusedTableBody = document.querySelector("#unused-table tbody");
 const usedTableBody = document.querySelector("#used-table tbody");
 const unusedCountSpan = document.getElementById("unused-count");
 const usedCountSpan = document.getElementById("used-count");
+const segmentTabs = document.querySelectorAll(".segment-tab");
+const segmentPanels = document.querySelectorAll(".segment-panel");
 
 // 生成随机兑换码
 function generateCode() {
@@ -152,6 +154,22 @@ async function loadRecentKeys() {
     usedCountSpan.textContent = usedCount;
   }
 }
+
+function activateSegment(panelId) {
+  segmentTabs.forEach((tab) => {
+    const isActive = tab.dataset.target === panelId;
+    tab.classList.toggle("active", isActive);
+    tab.setAttribute("aria-selected", isActive ? "true" : "false");
+  });
+
+  segmentPanels.forEach((panel) => {
+    panel.classList.toggle("active", panel.id === panelId);
+  });
+}
+
+segmentTabs.forEach((tab) => {
+  tab.addEventListener("click", () => activateSegment(tab.dataset.target));
+});
 
 // 退出登录
 logoutBtn.addEventListener("click", async () => {

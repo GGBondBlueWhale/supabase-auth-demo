@@ -50,7 +50,7 @@
         <div>
           <p class="capsule-label">记录</p>
           <h2>最近生成 / 使用的 CDKey</h2>
-          <p class="sub-text">自动按照「未使用」与「已使用」分栏，快速检索与分发。</p>
+          <p class="sub-text">自动按照「未使用」与「已使用」分区，切换查看更清晰。</p>
         </div>
         <div class="status-chips">
           <span class="pill success">未使用：<strong id="unused-count">0</strong></span>
@@ -58,53 +58,62 @@
         </div>
       </div>
 
-      <div class="cdkey-split-grid">
-        <div class="sub-card glass">
-          <div class="split-head">
-            <div>
-              <p class="capsule-label success">未使用</p>
-              <h3>等待分发的兑换码</h3>
-              <p class="sub-text">仅展示最近 50 条数据，优先显示最新生成的未使用兑换码。</p>
+      <div class="segment-tabs" role="tablist">
+        <button class="segment-tab active" data-target="unused-panel" role="tab" aria-selected="true">未使用</button>
+        <button class="segment-tab" data-target="used-panel" role="tab" aria-selected="false">已使用</button>
+      </div>
+
+      <div class="segment-panels">
+        <div id="unused-panel" class="segment-panel active" role="tabpanel">
+          <div class="sub-card glass">
+            <div class="split-head">
+              <div>
+                <p class="capsule-label success">未使用</p>
+                <h3>等待分发的兑换码</h3>
+                <p class="sub-text">仅展示最近 50 条数据，优先显示最新生成的未使用兑换码。</p>
+              </div>
+              <span class="tag">最新</span>
             </div>
-            <span class="tag">最新</span>
+            <table id="unused-table" class="cdkey-table">
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Plan</th>
+                  <th>Days</th>
+                  <th>Status</th>
+                  <th>Used By</th>
+                  <th>Used At</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
           </div>
-          <table id="unused-table" class="cdkey-table">
-            <thead>
-              <tr>
-                <th>Code</th>
-                <th>Plan</th>
-                <th>Days</th>
-                <th>Status</th>
-                <th>Used By</th>
-                <th>Used At</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
         </div>
 
-        <div class="sub-card glass">
-          <div class="split-head">
-            <div>
-              <p class="capsule-label">已使用</p>
-              <h3>已经被兑换的记录</h3>
-              <p class="sub-text">在这里集中查看已使用兑换码的邮箱与时间，方便追踪。</p>
+        <div id="used-panel" class="segment-panel" role="tabpanel">
+          <div class="sub-card glass">
+            <div class="split-head">
+              <div>
+                <p class="capsule-label">已使用</p>
+                <h3>已经被兑换的记录</h3>
+                <p class="sub-text">在这里集中查看已使用兑换码的邮箱与时间，方便追踪。</p>
+              </div>
+              <span class="tag">追踪</span>
             </div>
-            <span class="tag">追踪</span>
+            <table id="used-table" class="cdkey-table">
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Plan</th>
+                  <th>Days</th>
+                  <th>Status</th>
+                  <th>Used By</th>
+                  <th>Used At</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
           </div>
-          <table id="used-table" class="cdkey-table">
-            <thead>
-              <tr>
-                <th>Code</th>
-                <th>Plan</th>
-                <th>Days</th>
-                <th>Status</th>
-                <th>Used By</th>
-                <th>Used At</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
         </div>
       </div>
     </section>
