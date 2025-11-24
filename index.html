@@ -20,58 +20,91 @@
   <main class="main-container">
 
     <!-- 登录/注册区域 -->
-    <section id="auth-section" class="auth-tabs-container">
-      <div class="auth-tabs glass">
-        <button id="tab-login" class="tab active">登录</button>
-        <button id="tab-signup" class="tab">注册</button>
+    <section id="auth-section" class="auth-layout">
+      <div class="auth-hero">
+        <p class="capsule-label">安全 · 即时 · 多端同步</p>
+        <h1>管理你的 GSearch 订阅</h1>
+        <p>在一个地方完成登录、续费与账户管理，网页与 App 自动同步，随时掌握订阅状态。</p>
+        <div class="highlights">
+          <div class="highlight-item">🔒 双重加密传输，确保登录安全</div>
+          <div class="highlight-item">⚡ 快速兑换 CDKey，订阅实时生效</div>
+          <div class="highlight-item">📱 与 GSearch App 共用账号，免重复操作</div>
+        </div>
       </div>
 
-      <div id="form-container">
-        <form id="login-form" class="form card glass">
-          <h2>登录</h2>
-          <label>Email
-            <input type="email" id="login-email" required />
-          </label>
-          <label>Password
-            <input type="password" id="login-password" required />
-          </label>
-          <button type="submit" class="primary-btn">登录</button>
-        </form>
+      <div class="auth-card glass">
+        <div class="auth-header">
+          <p class="eyebrow">ACCOUNT</p>
+          <h2>欢迎回来</h2>
+          <p class="muted">登录或注册后即可管理订阅与兑换码。</p>
+        </div>
 
-        <form id="signup-form" class="form card glass">
+        <div class="auth-tabs">
+          <button id="tab-login" class="tab auth-tab active" data-target="login">登录</button>
+          <button id="tab-signup" class="tab auth-tab" data-target="signup">注册</button>
+        </div>
 
-          <h2>注册</h2>
-          <label>Email
-            <input type="email" id="signup-email" required />
-          </label>
-          <label>Password
-            <input type="password" id="signup-password" minlength="6" required />
-          </label>
-          <button type="submit" class="secondary-btn">注册新账号</button>
-          <p class="hint">一个账号可以同时登录网页和 GSearch App，共享订阅。</p>
-        </form>
+        <div class="auth-forms">
+          <form id="login-form" class="form auth-form active">
+            <label>Email
+              <input type="email" id="login-email" placeholder="you@example.com" required />
+            </label>
+            <label>Password
+              <input type="password" id="login-password" placeholder="••••••••" required />
+            </label>
+            <button type="submit" class="primary-btn">登录</button>
+          </form>
+
+          <form id="signup-form" class="form auth-form">
+            <label>Email
+              <input type="email" id="signup-email" placeholder="you@example.com" required />
+            </label>
+            <label>Password
+              <input type="password" id="signup-password" minlength="6" placeholder="至少 6 位密码" required />
+            </label>
+            <button type="submit" class="secondary-btn">注册新账号</button>
+            <p class="hint">账号可同时登录网页和 GSearch App，订阅自动同步。</p>
+          </form>
+        </div>
       </div>
     </section>
 
     <!-- 已登录后的仪表盘 -->
     <section id="dashboard-section" class="dashboard" style="display:none;">
+      <div class="hero-banner flex-between">
+        <div>
+          <p class="capsule-label">订阅中心</p>
+          <h1>欢迎回来</h1>
+          <p>查看订阅状态、账号信息并快速兑换续费。</p>
+        </div>
+        <div class="status-chip" id="subscription-status">未订阅</div>
+      </div>
+
       <div class="card-row">
         <div class="card glass">
           <h2>订阅状态</h2>
-          <p id="subscription-plan" class="big-value">—</p>
+          <p id="subscription-plan" class="metric-value">—</p>
           <p id="subscription-expire" class="sub-text">到期时间：—</p>
-          <p id="subscription-status" class="pill pill-gray">未订阅</p>
+          <p class="sub-text">订阅实时同步到 GSearch App。</p>
         </div>
         <div class="card glass">
           <h2>账号信息</h2>
-          <p><strong>Email：</strong><span id="profile-email"></span></p>
-          <p><strong>User ID：</strong><span id="profile-id"></span></p>
-          <p class="hint">GSearch App 登录时会使用同一个账号。</p>
+          <ul class="info-list">
+            <li><span class="bullet-dot"></span><strong>Email：</strong><span id="profile-email"></span></li>
+            <li><span class="bullet-dot"></span><strong>User ID：</strong><span id="profile-id"></span></li>
+            <li><span class="bullet-dot"></span><span class="sub-text">使用同一账号登录 App 与网页。</span></li>
+          </ul>
         </div>
       </div>
 
-      <div class="card glass">
-        <h2>CDKey 兑换续费</h2>
+      <div class="card glass action-card">
+        <div class="flex-between">
+          <div>
+            <p class="capsule-label">快速兑换</p>
+            <h2>CDKey 兑换续费</h2>
+            <p class="sub-text">输入兑换码后立即延长订阅时长。</p>
+          </div>
+        </div>
         <form id="redeem-form" class="form-inline">
           <input id="redeem-code-input" type="text" placeholder="输入兑换码，如 GSRCH-XXXX-XXXX" />
           <button type="submit" class="primary-btn">兑换</button>
