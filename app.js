@@ -31,7 +31,7 @@ function setGlobalStatus(msg) {
   globalStatus.textContent = msg || "";
 }
 
-// 登录 / 注册表单监听
+// 登录表单
 document.getElementById("login-form")?.addEventListener("submit", async (e) => {
   e.preventDefault();
   setGlobalStatus("正在登录...");
@@ -53,6 +53,7 @@ document.getElementById("login-form")?.addEventListener("submit", async (e) => {
   await refreshSessionAndUI();
 });
 
+// 注册表单
 document.getElementById("signup-form")?.addEventListener("submit", async (e) => {
   e.preventDefault();
   setGlobalStatus("正在注册...");
@@ -81,18 +82,24 @@ logoutBtn?.addEventListener("click", async () => {
   renderLoggedOut();
 });
 
-// 兑换码表单
+// ✅ CDKey 兑换表单（已经改成使用 code 参数，并适配 jsonb 返回值）
 redeemForm?.addEventListener("submit", async (e) => {
   e.preventDefault();
+
   const code = redeemInput.value.trim();
-  if (!code) return;
+  if (!code) {
+    redeemStatus.textContent = "兑换失败：请输入 CDKey";
+    redeemStatus.style.color = "#f97373";
+    return;
+  }
 
   redeemStatus.textContent = "正在兑换...";
   redeemStatus.style.color = "#e5e7eb"; // 灰色
   setGlobalStatus("");
 
+  // 关键修改：这里把参数名改成 code，必须和 Postgres 函数参数一致
   const { data, error } = await supabase.rpc("redeem_code", {
-    p_code: code,
+    code: code,
   });
 
   if (error) {
@@ -103,11 +110,15 @@ redeemForm?.addEventListener("submit", async (e) => {
   }
 
   redeemInput.value = "";
-  if (data && data.length > 0) {
-    const row = data[0];
-    redeemStatus.textContent = `兑换成功！当前套餐：${row.plan}，到期时间：${new Date(
-      row.expire_at
-    ).toLocaleString()}`;
+
+  // 你的 redeem_code 函数现在返回的是 jsonb 对象：{ plan, expire_at }
+  if (data) {
+    const plan = data.plan ?? "未知";
+    let expireText = "未知";
+    if (data.expire_at) {
+      expireText = new Date(data.expire_at).toLocaleString();
+    }
+    redeemStatus.textContent = `兑换成功！当前套餐：${plan}，到期时间：${expireText}`;
   } else {
     redeemStatus.textContent = "兑换成功，但没有返回订阅信息。";
   }
@@ -164,7 +175,7 @@ async function loadSubscription() {
     .eq("user_id", currentUser.id)
     .order("expire_at", { ascending: false })
     .limit(1)
-    .maybeSingle(); // 关键：允许 0 行，不再返回 406
+    .maybeSingle(); // 允许 0 行，不返回 406
 
   if (error) {
     console.warn("loadSubscription error", error);
