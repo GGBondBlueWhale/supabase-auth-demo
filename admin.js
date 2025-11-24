@@ -158,8 +158,8 @@ function updatePageControls() {
 
 async function refreshCounts() {
   const [unusedResult, usedResult] = await Promise.all([
-    supabase.from("cd_keys").select("id", { count: "exact", head: true }).eq("status", "unused"),
-    supabase.from("cd_keys").select("id", { count: "exact", head: true }).eq("status", "used"),
+    supabase.from("cd_keys").select("id", { count: "exact" }).eq("status", "unused"),
+    supabase.from("cd_keys").select("id", { count: "exact" }).eq("status", "used"),
   ]);
 
   if (!unusedResult.error && unusedCountSpan) {
