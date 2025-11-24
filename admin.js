@@ -12,6 +12,9 @@ const createForm = document.getElementById("create-cdkey-form");
 const codesOutput = document.getElementById("created-codes");
 const tableBody = document.querySelector("#cdkey-table tbody");
 
+// ===== 管理员邮箱白名单，只要在这个列表里就能进后台 =====
+const ADMIN_EMAILS = ["zwz2876013167@gmail.com"];
+
 function generateCode() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   const array = new Uint32Array(20);
@@ -19,8 +22,8 @@ function generateCode() {
   return Array.from(array, (n) => chars[n % chars.length]).join("");
 }
 
+// 只检查：是否登录 + 邮箱是否在管理员白名单里
 async function ensureAdmin() {
-  // 1. 先拿当前登录用户
   const { data, error } = await supabase.auth.getUser();
   if (error || !data.user) {
     console.warn("ensureAdmin: no user", error);
@@ -29,39 +32,22 @@ async function ensureAdmin() {
   }
 
   const user = data.user;
+  const email = (user.email || "").toLowerCase();
+  const isAdmin = ADMIN_EMAILS.includes(email);
 
-  // 2. 再去 profiles 里查是否是管理员
-  const { data: profile, error: pError } = await supabase
-    .from("profiles")
-    .select("email, is_admin")
-    .eq("id", user.id)
-    .maybeSingle(); // 允许 0 行，不会 406
-
-  if (pError) {
-    console.error("ensureAdmin: load profile error", pError);
+  if (!isAdmin) {
+    console.warn("ensureAdmin: user is not in admin email list", email);
     window.location.href = "./index.html";
     return null;
   }
 
-  if (!profile) {
-    console.warn("ensureAdmin: no profile row for user", user.id);
-    window.location.href = "./index.html";
-    return null;
-  }
-
-  if (!profile.is_admin) {
-    console.warn("ensureAdmin: user is not admin", user.id, profile);
-    window.location.href = "./index.html";
-    return null;
-  }
-
-  // 3. 是管理员，展示邮箱
-  adminEmailSpan.textContent = profile.email ?? user.email ?? "";
+  adminEmailSpan.textContent = user.email ?? "";
   return user;
 }
 
 createForm.addEventListener("submit", async (e) => {
   e.preventDefault();
+
   const plan = document.getElementById("plan-input").value.trim() || "pro";
   const days =
     parseInt(document.getElementById("days-input").value, 10) || 30;
@@ -94,7 +80,7 @@ createForm.addEventListener("submit", async (e) => {
   }
 
   codesOutput.textContent =
-    "已生成兑换码（请备份保存）:\n" +
+    "已生成兑换码（请复制保存）：\n" +
     data.map((r) => r.code).join("\n");
 
   await loadRecentKeys();
@@ -132,7 +118,7 @@ logoutBtn.addEventListener("click", async () => {
   window.location.href = "./index.html";
 });
 
-// 顶层 await：先检查管理员，再加载数据
+// 顶层 await：先验证管理员，再加载列表
 const user = await ensureAdmin();
 if (user) {
   await loadRecentKeys();
