@@ -20,22 +20,44 @@ function generateCode() {
 }
 
 async function ensureAdmin() {
+  // 1. 先拿当前登录用户
   const { data, error } = await supabase.auth.getUser();
   if (error || !data.user) {
+    console.warn("ensureAdmin: no user", error);
     window.location.href = "./index.html";
     return null;
   }
+
+  const user = data.user;
+
+  // 2. 再去 profiles 里查是否是管理员
   const { data: profile, error: pError } = await supabase
     .from("profiles")
     .select("email, is_admin")
-    .eq("id", data.user.id)
-    .single();
-  if (pError || !profile?.is_admin) {
+    .eq("id", user.id)
+    .maybeSingle(); // 允许 0 行，不会 406
+
+  if (pError) {
+    console.error("ensureAdmin: load profile error", pError);
     window.location.href = "./index.html";
     return null;
   }
-  adminEmailSpan.textContent = profile.email;
-  return data.user;
+
+  if (!profile) {
+    console.warn("ensureAdmin: no profile row for user", user.id);
+    window.location.href = "./index.html";
+    return null;
+  }
+
+  if (!profile.is_admin) {
+    console.warn("ensureAdmin: user is not admin", user.id, profile);
+    window.location.href = "./index.html";
+    return null;
+  }
+
+  // 3. 是管理员，展示邮箱
+  adminEmailSpan.textContent = profile.email ?? user.email ?? "";
+  return user;
 }
 
 createForm.addEventListener("submit", async (e) => {
@@ -43,14 +65,14 @@ createForm.addEventListener("submit", async (e) => {
   const plan = document.getElementById("plan-input").value.trim() || "pro";
   const days =
     parseInt(document.getElementById("days-input").value, 10) || 30;
-  const count =
-    Math.max(
-      1,
-      Math.min(
-        100,
-        parseInt(document.getElementById("count-input").value, 10) || 1
-      )
-    );
+  const count = Math.max(
+    1,
+    Math.min(
+      100,
+      parseInt(document.getElementById("count-input").value, 10) || 1
+    )
+  );
+
   const codes = [];
   for (let i = 0; i < count; i++) {
     codes.push({
@@ -59,15 +81,22 @@ createForm.addEventListener("submit", async (e) => {
       days,
     });
   }
-  const { data, error } = await supabase.from("cd_keys").insert(codes).select();
+
+  const { data, error } = await supabase
+    .from("cd_keys")
+    .insert(codes)
+    .select();
+
   if (error) {
     console.error(error);
-    codesOutput.textContent = "\u751f\u6210\u5931\u8d25\uff1a" + error.message;
+    codesOutput.textContent = "生成失败：" + error.message;
     return;
   }
+
   codesOutput.textContent =
-    "\u5df2\u751f\u6210\u5151\u6362\u7801\uff08\u8bf7\u5907\u4efd\u6536\u85cf\uff09:\n" +
+    "已生成兑换码（请备份保存）:\n" +
     data.map((r) => r.code).join("\n");
+
   await loadRecentKeys();
 });
 
@@ -77,10 +106,12 @@ async function loadRecentKeys() {
     .select("code, plan, days, status, used_at, used_by")
     .order("created_at", { ascending: false })
     .limit(50);
+
   if (error) {
     console.error(error);
     return;
   }
+
   tableBody.innerHTML = "";
   data.forEach((row) => {
     const tr = document.createElement("tr");
@@ -101,6 +132,7 @@ logoutBtn.addEventListener("click", async () => {
   window.location.href = "./index.html";
 });
 
+// 顶层 await：先检查管理员，再加载数据
 const user = await ensureAdmin();
 if (user) {
   await loadRecentKeys();
