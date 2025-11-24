@@ -471,29 +471,47 @@ input:focus {
 
 .segment-tabs {
   display: inline-flex;
-  padding: 4px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 999px;
-  gap: 6px;
+  padding: 8px;
+  background: linear-gradient(135deg, rgba(79, 195, 247, 0.1), rgba(111, 124, 255, 0.1));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  gap: 10px;
   width: fit-content;
+  box-shadow: 0 10px 24px rgba(10, 16, 35, 0.35);
 }
 
 .segment-tab {
-  border: none;
-  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.06);
   color: var(--text-sub);
-  padding: 10px 18px;
-  border-radius: 999px;
+  padding: 10px 14px;
+  border-radius: 12px;
   cursor: pointer;
   font-weight: 600;
-  transition: all 0.2s ease;
+  min-width: 130px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: all 0.18s ease;
 }
 
 .segment-tab.active {
-  background: linear-gradient(135deg, rgba(79, 195, 247, 0.22), rgba(111, 124, 255, 0.2));
+  background: linear-gradient(135deg, rgba(79, 195, 247, 0.24), rgba(111, 124, 255, 0.28));
   color: var(--text-main);
-  box-shadow: var(--shadow-soft);
+  box-shadow: 0 14px 28px rgba(79, 195, 247, 0.25);
+  border-color: rgba(79, 195, 247, 0.4);
+  transform: translateY(-1px);
+}
+
+.segment-tab .tab-title {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.segment-tab .tab-sub {
+  font-size: 12px;
+  color: var(--text-sub);
 }
 
 .segment-panels {
@@ -510,6 +528,49 @@ input:focus {
 
 .section-head {
   align-items: flex-start;
+}
+
+.table-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.table-meta {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.pagination-controls {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.nav-btn {
+  padding: 10px 14px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: var(--text-main);
+}
+
+.nav-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.page-info {
+  color: var(--text-sub);
+  font-size: 13px;
 }
 
 .status-chips {
@@ -579,6 +640,11 @@ input:focus {
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 14px;
   overflow: hidden;
+}
+
+.cdkey-table .empty-row td {
+  text-align: center;
+  color: var(--text-sub);
 }
 
 .cdkey-table th,

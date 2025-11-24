@@ -52,68 +52,62 @@
           <h2>最近生成 / 使用的 CDKey</h2>
           <p class="sub-text">自动按照「未使用」与「已使用」分区，切换查看更清晰。</p>
         </div>
-        <div class="status-chips">
-          <span class="pill success">未使用：<strong id="unused-count">0</strong></span>
-          <span class="pill muted">已使用：<strong id="used-count">0</strong></span>
-        </div>
       </div>
 
       <div class="segment-tabs" role="tablist">
-        <button class="segment-tab active" data-target="unused-panel" role="tab" aria-selected="true">未使用</button>
-        <button class="segment-tab" data-target="used-panel" role="tab" aria-selected="false">已使用</button>
+        <button
+          class="segment-tab active"
+          data-status="unused"
+          role="tab"
+          aria-selected="true"
+        >
+          <span class="tab-title">未使用</span>
+          <span class="tab-sub">等待发放</span>
+        </button>
+        <button class="segment-tab" data-status="used" role="tab" aria-selected="false">
+          <span class="tab-title">已使用</span>
+          <span class="tab-sub">兑换记录</span>
+        </button>
       </div>
 
-      <div class="segment-panels">
-        <div id="unused-panel" class="segment-panel active" role="tabpanel">
-          <div class="sub-card glass">
-            <div class="split-head">
-              <div>
-                <p class="capsule-label success">未使用</p>
-                <h3>等待分发的兑换码</h3>
-                <p class="sub-text">仅展示最近 50 条数据，优先显示最新生成的未使用兑换码。</p>
-              </div>
-              <span class="tag">最新</span>
+      <div class="segment-panel active" role="tabpanel">
+        <div class="sub-card glass">
+          <div class="split-head">
+            <div>
+              <p id="status-badge" class="capsule-label success">未使用</p>
+              <h3 id="list-title">等待分发的兑换码</h3>
+              <p id="list-desc" class="sub-text">
+                支持分页查看，默认每页 50 条，可随时切换已使用/未使用列表。
+              </p>
             </div>
-            <table id="unused-table" class="cdkey-table">
-              <thead>
-                <tr>
-                  <th>Code</th>
-                  <th>Plan</th>
-                  <th>Days</th>
-                  <th>Status</th>
-                  <th>Used By</th>
-                  <th>Used At</th>
-                </tr>
-              </thead>
-              <tbody></tbody>
-            </table>
+            <span id="list-tag" class="tag">最新</span>
           </div>
-        </div>
 
-        <div id="used-panel" class="segment-panel" role="tabpanel">
-          <div class="sub-card glass">
-            <div class="split-head">
-              <div>
-                <p class="capsule-label">已使用</p>
-                <h3>已经被兑换的记录</h3>
-                <p class="sub-text">在这里集中查看已使用兑换码的邮箱与时间，方便追踪。</p>
-              </div>
-              <span class="tag">追踪</span>
+          <div class="table-toolbar">
+            <div class="table-meta">
+              <span class="pill success">未使用：<strong id="unused-count">0</strong></span>
+              <span class="pill muted">已使用：<strong id="used-count">0</strong></span>
             </div>
-            <table id="used-table" class="cdkey-table">
-              <thead>
-                <tr>
-                  <th>Code</th>
-                  <th>Plan</th>
-                  <th>Days</th>
-                  <th>Status</th>
-                  <th>Used By</th>
-                  <th>Used At</th>
-                </tr>
-              </thead>
-              <tbody></tbody>
-            </table>
+            <div class="pagination-controls">
+              <button id="prev-page-btn" class="ghost-btn nav-btn" type="button">上一页</button>
+              <span id="page-info" class="page-info">第 1 / 1 页（共 0 条）</span>
+              <button id="next-page-btn" class="ghost-btn nav-btn" type="button">下一页</button>
+            </div>
           </div>
+
+          <table id="cdkey-table" class="cdkey-table">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Plan</th>
+                <th>Days</th>
+                <th>Status</th>
+                <th>Used By</th>
+                <th>Used At</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
         </div>
       </div>
     </section>
