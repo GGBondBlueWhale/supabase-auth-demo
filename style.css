@@ -266,3 +266,19 @@ input:focus {
   color: var(--text-sub);
   font-weight: 500;
 }
+
+/* Stack login and registration forms vertically and hide auth tabs */
+.auth-tabs-container .auth-tabs {
+  display: none;
+}
+
+#form-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+#login-form,
+#signup-form {
+  display: block;
+}
