@@ -15,6 +15,9 @@ const dashboardSection = document.getElementById("dashboard-section");
 const logoutBtn = document.getElementById("logout-btn");
 const userEmailSpan = document.getElementById("current-user-email");
 const globalStatus = document.getElementById("global-status");
+const authTabs = document.querySelectorAll(".auth-tab");
+const loginFormEl = document.getElementById("login-form");
+const signupFormEl = document.getElementById("signup-form");
 
 const subscriptionPlan = document.getElementById("subscription-plan");
 const subscriptionExpire = document.getElementById("subscription-expire");
@@ -30,6 +33,28 @@ const redeemStatus = document.getElementById("redeem-status");
 function setGlobalStatus(msg) {
   globalStatus.textContent = msg || "";
 }
+
+// 切换登录/注册标签
+function setAuthTab(target = "login") {
+  authTabs.forEach((btn) => {
+    const isActive = btn.dataset.target === target;
+    btn.classList.toggle("active", isActive);
+  });
+
+  if (target === "signup") {
+    signupFormEl?.classList.add("active");
+    loginFormEl?.classList.remove("active");
+  } else {
+    loginFormEl?.classList.add("active");
+    signupFormEl?.classList.remove("active");
+  }
+}
+
+authTabs.forEach((btn) => {
+  btn.addEventListener("click", () => setAuthTab(btn.dataset.target));
+});
+
+setAuthTab("login");
 
 // 登录表单
 document.getElementById("login-form")?.addEventListener("submit", async (e) => {
@@ -135,11 +160,12 @@ function renderLoggedOut() {
   userEmailSpan.textContent = "";
   profileEmail.textContent = "";
   profileId.textContent = "";
+  setAuthTab("login");
   // 清空订阅显示
   subscriptionPlan.textContent = "未订阅";
   subscriptionExpire.textContent = "到期时间：—";
   subscriptionStatus.textContent = "未订阅";
-  subscriptionStatus.className = "pill pill-gray";
+  subscriptionStatus.className = "status-chip";
 }
 
 async function renderLoggedIn(user) {
@@ -183,7 +209,7 @@ async function loadSubscription() {
     subscriptionPlan.textContent = "未订阅";
     subscriptionExpire.textContent = "到期时间：—";
     subscriptionStatus.textContent = "未订阅";
-    subscriptionStatus.className = "pill pill-gray";
+    subscriptionStatus.className = "status-chip";
     return;
   }
 
@@ -192,7 +218,7 @@ async function loadSubscription() {
     subscriptionPlan.textContent = "未订阅";
     subscriptionExpire.textContent = "到期时间：—";
     subscriptionStatus.textContent = "未订阅";
-    subscriptionStatus.className = "pill pill-gray";
+    subscriptionStatus.className = "status-chip";
     return;
   }
 
@@ -203,10 +229,10 @@ async function loadSubscription() {
   const now = new Date();
   if (expire.getTime() > now.getTime()) {
     subscriptionStatus.textContent = "订阅中";
-    subscriptionStatus.className = "pill pill-green";
+    subscriptionStatus.className = "status-chip green";
   } else {
     subscriptionStatus.textContent = "已过期";
-    subscriptionStatus.className = "pill pill-red";
+    subscriptionStatus.className = "status-chip red";
   }
 }
 

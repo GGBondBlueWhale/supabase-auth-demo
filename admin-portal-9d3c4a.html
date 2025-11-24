@@ -18,8 +18,23 @@
   </header>
 
   <main class="main-container">
-    <section class="card glass">
-      <h2>生成 CDKey</h2>
+    <section class="hero-banner flex-between">
+      <div>
+        <p class="capsule-label">管理中心</p>
+        <h1>生成与追踪 CDKey</h1>
+        <p>面向管理员的兑换码管理面板，快速生成、查看最近使用情况。</p>
+      </div>
+      <div class="status-chip">仅管理员可见</div>
+    </section>
+
+    <section class="card glass action-card">
+      <div class="flex-between">
+        <div>
+          <p class="capsule-label">批量生成</p>
+          <h2>生成 CDKey</h2>
+          <p class="sub-text">设定套餐、天数与数量，一键生成并复制保存。</p>
+        </div>
+      </div>
       <form id="create-cdkey-form" class="form-inline">
         <input id="plan-input" type="text" placeholder="套餐名，如 pro" value="pro" />
         <input id="days-input" type="number" placeholder="天数，如 30" value="30" />
@@ -31,7 +46,12 @@
     </section>
 
     <section class="card glass">
-      <h2>最近生成 / 使用的 CDKey</h2>
+      <div class="flex-between">
+        <div>
+          <p class="capsule-label">记录</p>
+          <h2>最近生成 / 使用的 CDKey</h2>
+        </div>
+      </div>
       <table id="cdkey-table" class="cdkey-table">
         <thead>
           <tr>
