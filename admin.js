@@ -10,8 +10,9 @@ const adminEmailSpan = document.getElementById("admin-email");
 const logoutBtn = document.getElementById("admin-logout-btn");
 const createForm = document.getElementById("create-cdkey-form");
 const codesOutput = document.getElementById("created-codes");
-const tableBody = document.querySelector("#cdkey-table tbody);
+const tableBody = document.querySelector("#cdkey-table tbody");
 
+// 生成随机兑换码
 function generateCode() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   const array = new Uint32Array(20);
@@ -19,7 +20,7 @@ function generateCode() {
   return Array.from(array, (n) => chars[n % chars.length]).join("");
 }
 
-// ✅ 只通过 profiles.is_admin 判断是否管理员，不再在前端写死邮箱
+// ✅ 通过 profiles.is_admin 判断是否管理员（不在前端写死邮箱）
 async function ensureAdmin() {
   const { data: userData, error: userError } = await supabase.auth.getUser();
   if (userError || !userData?.user) {
