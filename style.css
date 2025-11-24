@@ -320,6 +320,12 @@ input:focus {
   color: var(--text-sub);
 }
 
+.muted-text {
+  font-size: 14px;
+  color: var(--text-sub);
+  margin: 0 0 8px;
+}
+
 .status-chip {
   display: inline-flex;
   align-items: center;
@@ -395,6 +401,43 @@ input:focus {
   font-size: 14px;
   color: var(--text-sub);
   line-height: 1.7;
+}
+
+.history-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.history-item {
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.history-main {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-weight: 600;
+}
+
+.history-plan {
+  color: #dce8ff;
+}
+
+.history-expire {
+  color: var(--text-sub);
+  font-size: 14px;
+}
+
+.history-sub {
+  color: var(--text-sub);
+  font-size: 13px;
+  margin-top: 6px;
 }
 
 .global-status {

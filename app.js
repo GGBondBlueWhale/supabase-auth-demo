@@ -29,6 +29,8 @@ const profileId = document.getElementById("profile-id");
 const redeemForm = document.getElementById("redeem-form");
 const redeemInput = document.getElementById("redeem-code-input");
 const redeemStatus = document.getElementById("redeem-status");
+const historyList = document.getElementById("redeem-history-list");
+const historyEmpty = document.getElementById("redeem-history-empty");
 
 function setGlobalStatus(msg) {
   globalStatus.textContent = msg || "";
@@ -155,6 +157,7 @@ redeemForm?.addEventListener("submit", async (e) => {
   redeemStatus.style.color = "#22c55e";
 
   await loadSubscription();
+  await loadRedeemHistory();
 });
 
 // UI 渲染函数
@@ -165,6 +168,8 @@ function renderLoggedOut() {
   userEmailSpan.textContent = "";
   profileEmail.textContent = "";
   profileId.textContent = "";
+  historyList.innerHTML = "";
+  historyEmpty.style.display = "block";
   setAuthTab("login");
   // 清空订阅显示
   subscriptionPlan.textContent = "未订阅";
@@ -185,6 +190,7 @@ async function renderLoggedIn(user) {
   profileId.textContent = user.id ?? "";
 
   await loadSubscription();
+  await loadRedeemHistory();
 }
 
 // 加载订阅信息
@@ -239,6 +245,83 @@ async function loadSubscription() {
     subscriptionStatus.textContent = "已过期";
     subscriptionStatus.className = "status-chip red";
   }
+}
+
+async function loadRedeemHistory() {
+  if (!historyList || !historyEmpty) return;
+
+  // 确保有当前用户
+  if (!currentUser) {
+    const { data, error } = await supabase.auth.getUser();
+    if (error || !data.user) {
+      console.warn("loadRedeemHistory: no current user", error);
+      renderLoggedOut();
+      return;
+    }
+    currentUser = data.user;
+  }
+
+  const formatDate = (value) => {
+    if (!value) return "—";
+    const d = new Date(value);
+    return d.toLocaleString();
+  };
+
+  historyList.innerHTML = "";
+
+  const { data, error } = await supabase
+    .from("cd_keys")
+    .select("code, plan, days, used_at, expire_at")
+    .eq("used_by", currentUser.id)
+    .eq("status", "used")
+    .order("used_at", { ascending: false })
+    .limit(50);
+
+  if (error) {
+    console.error("loadRedeemHistory error", error);
+    historyEmpty.style.display = "none";
+    const li = document.createElement("li");
+    li.className = "history-item";
+    li.textContent = "加载失败：" + (error.message || "未知错误");
+    historyList.appendChild(li);
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    historyEmpty.style.display = "block";
+    return;
+  }
+
+  historyEmpty.style.display = "none";
+
+  data.forEach((item) => {
+    const li = document.createElement("li");
+    li.className = "history-item";
+
+    const main = document.createElement("div");
+    main.className = "history-main";
+
+    const planSpan = document.createElement("span");
+    planSpan.className = "history-plan";
+    const daysText = item.days ? `${item.days} 天` : "—";
+    planSpan.textContent = `${item.plan ?? "未知套餐"} · ${daysText}`;
+
+    const expireSpan = document.createElement("span");
+    expireSpan.className = "history-expire";
+    expireSpan.textContent = `到期：${formatDate(item.expire_at)}`;
+
+    main.appendChild(planSpan);
+    main.appendChild(expireSpan);
+
+    const sub = document.createElement("div");
+    sub.className = "history-sub";
+    const codePreview = item.code ? `${item.code.slice(0, 7)}…` : "—";
+    sub.textContent = `兑换时间：${formatDate(item.used_at)} · CDKey：${codePreview}`;
+
+    li.appendChild(main);
+    li.appendChild(sub);
+    historyList.appendChild(li);
+  });
 }
 
 // 初始化：检查是否已有登陆状态
