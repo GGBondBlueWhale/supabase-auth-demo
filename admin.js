@@ -10,7 +10,10 @@ const adminEmailSpan = document.getElementById("admin-email");
 const logoutBtn = document.getElementById("admin-logout-btn");
 const createForm = document.getElementById("create-cdkey-form");
 const codesOutput = document.getElementById("created-codes");
-const tableBody = document.querySelector("#cdkey-table tbody");
+const unusedTableBody = document.querySelector("#unused-table tbody");
+const usedTableBody = document.querySelector("#used-table tbody");
+const unusedCountSpan = document.getElementById("unused-count");
+const usedCountSpan = document.getElementById("used-count");
 
 // 生成随机兑换码
 function generateCode() {
@@ -116,7 +119,12 @@ async function loadRecentKeys() {
     return;
   }
 
-  tableBody.innerHTML = "";
+  unusedTableBody.innerHTML = "";
+  usedTableBody.innerHTML = "";
+
+  let unusedCount = 0;
+  let usedCount = 0;
+
   data.forEach((row) => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
@@ -127,8 +135,22 @@ async function loadRecentKeys() {
       <td>${row.used_by ?? ""}</td>
       <td>${row.used_at ? new Date(row.used_at).toLocaleString() : ""}</td>
     `;
-    tableBody.appendChild(tr);
+
+    if (row.status === "unused") {
+      unusedTableBody.appendChild(tr);
+      unusedCount += 1;
+    } else {
+      usedTableBody.appendChild(tr);
+      usedCount += 1;
+    }
   });
+
+  if (unusedCountSpan) {
+    unusedCountSpan.textContent = unusedCount;
+  }
+  if (usedCountSpan) {
+    usedCountSpan.textContent = usedCount;
+  }
 }
 
 // 退出登录
