@@ -48,6 +48,10 @@ async function ensureAdmin() {
 createForm.addEventListener("submit", async (e) => {
   e.preventDefault();
 
+  // ✅ 再次确认当前是管理员，并拿到 user.id 用来写入 created_by
+  const currentUser = await ensureAdmin();
+  if (!currentUser) return;
+
   const plan = document.getElementById("plan-input").value.trim() || "pro";
   const days =
     parseInt(document.getElementById("days-input").value, 10) || 30;
@@ -65,6 +69,9 @@ createForm.addEventListener("submit", async (e) => {
       code: generateCode(),
       plan,
       days,
+      // 👇 这两个字段是为配合 RLS 的关键
+      status: "unused",           // 初始状态，和你表里的默认逻辑保持一致
+      created_by: currentUser.id, // 如果你的列不是这个名字，这里要改成对应列名
     });
   }
 
