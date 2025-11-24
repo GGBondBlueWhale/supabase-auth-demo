@@ -157,27 +157,30 @@ function updatePageControls() {
 }
 
 async function refreshCounts() {
-  const [unusedResult, usedResult] = await Promise.all([
-    supabase.from("cd_keys").select("code").eq("status", "unused"),
-    supabase.from("cd_keys").select("code").eq("status", "used"),
+  const [
+    { data: unusedCount, error: unusedError },
+    { data: usedCount, error: usedError },
+  ] = await Promise.all([
+    supabase.rpc("count_cd_keys_by_status", { p_status: "unused" }),
+    supabase.rpc("count_cd_keys_by_status", { p_status: "used" }),
   ]);
 
-  if (!unusedResult.error && unusedResult.data) {
-    const unusedCount = unusedResult.data.length;
-    if (unusedCountSpan) unusedCountSpan.textContent = unusedCount;
-    totalCounts.unused = unusedCount;
-    totalPages.unused = Math.max(1, Math.ceil(unusedCount / PAGE_SIZE));
-  } else if (unusedResult.error) {
-    console.error("refreshCounts unused error", unusedResult.error);
+  if (!unusedError && typeof unusedCount === "number") {
+    const count = unusedCount;
+    if (unusedCountSpan) unusedCountSpan.textContent = count;
+    totalCounts.unused = count;
+    totalPages.unused = Math.max(1, Math.ceil(count / PAGE_SIZE));
+  } else if (unusedError) {
+    console.error("refreshCounts unused error", unusedError);
   }
 
-  if (!usedResult.error && usedResult.data) {
-    const usedCount = usedResult.data.length;
-    if (usedCountSpan) usedCountSpan.textContent = usedCount;
-    totalCounts.used = usedCount;
-    totalPages.used = Math.max(1, Math.ceil(usedCount / PAGE_SIZE));
-  } else if (usedResult.error) {
-    console.error("refreshCounts used error", usedResult.error);
+  if (!usedError && typeof usedCount === "number") {
+    const count = usedCount;
+    if (usedCountSpan) usedCountSpan.textContent = count;
+    totalCounts.used = count;
+    totalPages.used = Math.max(1, Math.ceil(count / PAGE_SIZE));
+  } else if (usedError) {
+    console.error("refreshCounts used error", usedError);
   }
 
   updatePageControls();
