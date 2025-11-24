@@ -6,6 +6,9 @@ const SUPABASE_ANON_KEY =
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// 当前登录用户（缓存一下，订阅查询要用）
+let currentUser = null;
+
 // DOM
 const authSection = document.getElementById("auth-section");
 const dashboardSection = document.getElementById("dashboard-section");
@@ -42,17 +45,17 @@ document.getElementById("login-form")?.addEventListener("submit", async (e) => {
 
   if (error) {
     console.error(error);
-    setGlobalStatus("\u767b\u9646\u5931\u8d25：" + error.message);
+    setGlobalStatus("登录失败：" + error.message);
     return;
   }
 
-  setGlobalStatus("\u767b\u9646\u6210\u529f。");
+  setGlobalStatus("登录成功。");
   await refreshSessionAndUI();
 });
 
 document.getElementById("signup-form")?.addEventListener("submit", async (e) => {
   e.preventDefault();
-  setGlobalStatus("\u6b63\u5728\u6ce8\u518c...");
+  setGlobalStatus("正在注册...");
   const email = document.getElementById("signup-email").value.trim();
   const password = document.getElementById("signup-password").value;
 
@@ -63,17 +66,18 @@ document.getElementById("signup-form")?.addEventListener("submit", async (e) => 
 
   if (error) {
     console.error(error);
-    setGlobalStatus("\u6ce8\u518c\u5931\u8d25：" + error.message);
+    setGlobalStatus("注册失败：" + error.message);
     return;
   }
 
-  setGlobalStatus("\u6ce8\u518c\u6210\u529f，\u8bf7\u4f7f\u7528\u8be5\u5e10\u53f7\u767b\u9646。");
+  setGlobalStatus("注册成功，请使用该账号登录。");
 });
 
 // 退出登录
 logoutBtn?.addEventListener("click", async () => {
   await supabase.auth.signOut();
-  setGlobalStatus("\u5df2\u9000\u51fa\u767b\u5f55。");
+  currentUser = null;
+  setGlobalStatus("已退出登录。");
   renderLoggedOut();
 });
 
@@ -83,7 +87,8 @@ redeemForm?.addEventListener("submit", async (e) => {
   const code = redeemInput.value.trim();
   if (!code) return;
 
-  redeemStatus.textContent = "\u6b63\u5728\u5151\u6362...";
+  redeemStatus.textContent = "正在兑换...";
+  redeemStatus.style.color = "#e5e7eb"; // 灰色
   setGlobalStatus("");
 
   const { data, error } = await supabase.rpc("redeem_code", {
@@ -92,15 +97,20 @@ redeemForm?.addEventListener("submit", async (e) => {
 
   if (error) {
     console.error(error);
-    redeemStatus.textContent = "\u5151\u6362\u5931\u8d25：" + error.message;
+    redeemStatus.textContent = "兑换失败：" + error.message;
     redeemStatus.style.color = "#f97373";
     return;
   }
 
   redeemInput.value = "";
-  redeemStatus.textContent = `\u5151\u6362\u6210\u529f！\u5f53\u524d\u5957\u9910：${data[0].plan}\uFF0C\u5230\u671F\u65F6\u95F4：${new Date(
-    data[0].expire_at
-  ).toLocaleString()}`;
+  if (data && data.length > 0) {
+    const row = data[0];
+    redeemStatus.textContent = `兑换成功！当前套餐：${row.plan}，到期时间：${new Date(
+      row.expire_at
+    ).toLocaleString()}`;
+  } else {
+    redeemStatus.textContent = "兑换成功，但没有返回订阅信息。";
+  }
   redeemStatus.style.color = "#22c55e";
 
   await loadSubscription();
@@ -112,49 +122,79 @@ function renderLoggedOut() {
   dashboardSection.style.display = "none";
   logoutBtn.style.display = "none";
   userEmailSpan.textContent = "";
+  profileEmail.textContent = "";
+  profileId.textContent = "";
+  // 清空订阅显示
+  subscriptionPlan.textContent = "未订阅";
+  subscriptionExpire.textContent = "到期时间：—";
+  subscriptionStatus.textContent = "未订阅";
+  subscriptionStatus.className = "pill pill-gray";
 }
 
 async function renderLoggedIn(user) {
+  currentUser = user;
+
   authSection.style.display = "none";
   dashboardSection.style.display = "block";
   logoutBtn.style.display = "inline-flex";
+
   userEmailSpan.textContent = user.email ?? "";
   profileEmail.textContent = user.email ?? "";
-  profileId.textContent = user.id;
+  profileId.textContent = user.id ?? "";
 
   await loadSubscription();
 }
 
 // 加载订阅信息
 async function loadSubscription() {
+  // 确保有当前用户
+  if (!currentUser) {
+    const { data, error } = await supabase.auth.getUser();
+    if (error || !data.user) {
+      console.warn("loadSubscription: no current user", error);
+      renderLoggedOut();
+      return;
+    }
+    currentUser = data.user;
+  }
+
   const { data, error } = await supabase
     .from("subscriptions")
     .select("*")
-    .single();
+    .eq("user_id", currentUser.id)
+    .order("expire_at", { ascending: false })
+    .limit(1)
+    .maybeSingle(); // 关键：允许 0 行，不再返回 406
 
-  if (error && error.code !== "PGRST116") {
-    // PGRST116 = no rows found
+  if (error) {
     console.warn("loadSubscription error", error);
-  }
-
-  if (!data) {
-    subscriptionPlan.textContent = "\u672a\u8ba2\u9605";
-    subscriptionExpire.textContent = "\u5230\u671F\u65F6\u95F4：—";
-    subscriptionStatus.textContent = "\u672a\u8ba2\u9605";
+    // 出错时当作未订阅处理
+    subscriptionPlan.textContent = "未订阅";
+    subscriptionExpire.textContent = "到期时间：—";
+    subscriptionStatus.textContent = "未订阅";
     subscriptionStatus.className = "pill pill-gray";
     return;
   }
 
-  subscriptionPlan.textContent = data.plan ?? "\u672a\u8ba2\u9605";
+  if (!data) {
+    // 没有订阅记录 = 未订阅
+    subscriptionPlan.textContent = "未订阅";
+    subscriptionExpire.textContent = "到期时间：—";
+    subscriptionStatus.textContent = "未订阅";
+    subscriptionStatus.className = "pill pill-gray";
+    return;
+  }
+
+  subscriptionPlan.textContent = data.plan ?? "未订阅";
   const expire = new Date(data.expire_at);
-  subscriptionExpire.textContent = "\u5230\u671F\u65F6\u95F4：" + expire.toLocaleString();
+  subscriptionExpire.textContent = "到期时间：" + expire.toLocaleString();
 
   const now = new Date();
   if (expire.getTime() > now.getTime()) {
-    subscriptionStatus.textContent = "\u8ba2\u9605\u4e2d";
+    subscriptionStatus.textContent = "订阅中";
     subscriptionStatus.className = "pill pill-green";
   } else {
-    subscriptionStatus.textContent = "\u5df2\u8fc7\u671F";
+    subscriptionStatus.textContent = "已过期";
     subscriptionStatus.className = "pill pill-red";
   }
 }
@@ -163,9 +203,11 @@ async function loadSubscription() {
 async function refreshSessionAndUI() {
   const { data, error } = await supabase.auth.getUser();
   if (error || !data.user) {
+    currentUser = null;
     renderLoggedOut();
     return;
   }
+  currentUser = data.user;
   await renderLoggedIn(data.user);
 }
 
