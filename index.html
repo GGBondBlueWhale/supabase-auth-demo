@@ -19,11 +19,16 @@
 
   <main class="main-container">
 
-    <!-- 未登录：登录 / 注册卡片 -->
-    <section id="auth-section" class="card-grid">
-      <div class="card glass">
-        <h2>登录</h2>
-        <form id="login-form" class="form">
+    <!-- 登录/注册区域 -->
+    <section id="auth-section" class="auth-tabs-container">
+      <div class="auth-tabs glass">
+        <button id="tab-login" class="tab active">登录</button>
+        <button id="tab-signup" class="tab">注册</button>
+      </div>
+
+      <div id="form-container">
+        <form id="login-form" class="form card glass">
+          <h2>登录</h2>
           <label>Email
             <input type="email" id="login-email" required />
           </label>
@@ -32,11 +37,9 @@
           </label>
           <button type="submit" class="primary-btn">登录</button>
         </form>
-      </div>
 
-      <div class="card glass">
-        <h2>注册</h2>
-        <form id="signup-form" class="form">
+        <form id="signup-form" class="form card glass" style="display:none;">
+          <h2>注册</h2>
           <label>Email
             <input type="email" id="signup-email" required />
           </label>
@@ -44,12 +47,12 @@
             <input type="password" id="signup-password" minlength="6" required />
           </label>
           <button type="submit" class="secondary-btn">注册新账号</button>
+          <p class="hint">一个账号可以同时登录网页和 GSearch App，共享订阅。</p>
         </form>
-        <p class="hint">一个账号可以同时登录网页和 GSearch App，共享订阅。</p>
       </div>
     </section>
 
-    <!-- 已登录：订阅仪表盘 -->
+    <!-- 已登录后的仪表盘 -->
     <section id="dashboard-section" class="dashboard" style="display:none;">
       <div class="card-row">
         <div class="card glass">
@@ -58,7 +61,6 @@
           <p id="subscription-expire" class="sub-text">到期时间：—</p>
           <p id="subscription-status" class="pill pill-gray">未订阅</p>
         </div>
-
         <div class="card glass">
           <h2>账号信息</h2>
           <p><strong>Email：</strong><span id="profile-email"></span></p>
@@ -87,7 +89,6 @@
     </section>
 
     <div id="global-status" class="global-status"></div>
-
   </main>
 
   <script type="module" src="app.js"></script>
