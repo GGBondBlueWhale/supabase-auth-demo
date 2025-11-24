@@ -35,19 +35,24 @@ function setGlobalStatus(msg) {
 }
 
 // 切换登录/注册标签
+let activeAuthTab = null;
 function setAuthTab(target = "login") {
+  if (target === activeAuthTab) return;
+  activeAuthTab = target;
+
   authTabs.forEach((btn) => {
     const isActive = btn.dataset.target === target;
     btn.classList.toggle("active", isActive);
+    btn.setAttribute("aria-selected", isActive ? "true" : "false");
   });
 
-  if (target === "signup") {
-    signupFormEl?.classList.add("active");
-    loginFormEl?.classList.remove("active");
-  } else {
-    loginFormEl?.classList.add("active");
-    signupFormEl?.classList.remove("active");
-  }
+  const showSignup = target === "signup";
+  signupFormEl?.classList.toggle("active", showSignup);
+  signupFormEl?.setAttribute("aria-hidden", showSignup ? "false" : "true");
+
+  const showLogin = !showSignup;
+  loginFormEl?.classList.toggle("active", showLogin);
+  loginFormEl?.setAttribute("aria-hidden", showLogin ? "false" : "true");
 }
 
 authTabs.forEach((btn) => {
