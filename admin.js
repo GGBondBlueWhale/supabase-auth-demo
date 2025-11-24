@@ -10,10 +10,7 @@ const adminEmailSpan = document.getElementById("admin-email");
 const logoutBtn = document.getElementById("admin-logout-btn");
 const createForm = document.getElementById("create-cdkey-form");
 const codesOutput = document.getElementById("created-codes");
-const tableBody = document.querySelector("#cdkey-table tbody");
-
-// ===== 管理员邮箱白名单，只要在这个列表里就能进后台 =====
-const ADMIN_EMAILS = ["zwz2876013167@gmail.com"];
+const tableBody = document.querySelector("#cdkey-table tbody);
 
 function generateCode() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -22,21 +19,32 @@ function generateCode() {
   return Array.from(array, (n) => chars[n % chars.length]).join("");
 }
 
-// 只检查：是否登录 + 邮箱是否在管理员白名单里
+// ✅ 只通过 profiles.is_admin 判断是否管理员，不再在前端写死邮箱
 async function ensureAdmin() {
-  const { data, error } = await supabase.auth.getUser();
-  if (error || !data.user) {
-    console.warn("ensureAdmin: no user", error);
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError || !userData?.user) {
+    console.warn("ensureAdmin: no user", userError);
     window.location.href = "./index.html";
     return null;
   }
 
-  const user = data.user;
-  const email = (user.email || "").toLowerCase();
-  const isAdmin = ADMIN_EMAILS.includes(email);
+  const user = userData.user;
 
-  if (!isAdmin) {
-    console.warn("ensureAdmin: user is not in admin email list", email);
+  // 从 profiles 表读取 is_admin
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("is_admin")
+    .eq("id", user.id)
+    .single();
+
+  if (profileError) {
+    console.warn("ensureAdmin: failed to load profile", profileError);
+    window.location.href = "./index.html";
+    return null;
+  }
+
+  if (!profile?.is_admin) {
+    console.warn("ensureAdmin: user is not admin");
     window.location.href = "./index.html";
     return null;
   }
@@ -48,7 +56,7 @@ async function ensureAdmin() {
 createForm.addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  // ✅ 再次确认当前是管理员
+  // 再次确认是管理员
   const currentUser = await ensureAdmin();
   if (!currentUser) return;
 
@@ -69,8 +77,7 @@ createForm.addEventListener("submit", async (e) => {
       code: generateCode(),
       plan,
       days,
-      // 当前 RLS 只检查管理员权限，不需要 created_by 字段
-      status: "unused", // 初始状态，和表里的逻辑保持一致
+      status: "unused",
     });
   }
 
