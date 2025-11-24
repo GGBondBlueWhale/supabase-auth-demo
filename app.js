@@ -273,7 +273,6 @@ async function loadRedeemHistory() {
     .from("cd_keys")
     .select("code, plan, days, used_at, expire_at")
     .eq("used_by", currentUser.id)
-    .eq("status", "used")
     .order("used_at", { ascending: false })
     .limit(50);
 
