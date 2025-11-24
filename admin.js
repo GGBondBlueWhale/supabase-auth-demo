@@ -20,10 +20,11 @@ function generateCode() {
   return Array.from(array, (n) => chars[n % chars.length]).join("");
 }
 
-// ✅ 通过 profiles.is_admin 判断是否管理员（不在前端写死邮箱）
-//   不再用 .single()，避免 PGRST116 把人踢出去
+// 验证当前用户是否管理员
 async function ensureAdmin() {
+  // 1. 拿当前登录用户
   const { data: userData, error: userError } = await supabase.auth.getUser();
+
   if (userError || !userData?.user) {
     console.warn("ensureAdmin: no user", userError);
     window.location.href = "./index.html";
@@ -32,10 +33,12 @@ async function ensureAdmin() {
 
   const user = userData.user;
 
-  const { data: profiles, error: profileError } = await supabase
+  // 2. 查 profiles 表，看 is_admin
+  const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select("is_admin")
-    .eq("email", user.email);
+    .eq("id", user.id)     // 按 id 查，配合刚才 SQL 里的 auth.uid() = id
+    .maybeSingle();        // ⭐ 关键：用 maybeSingle，0 行时不会抛错
 
   if (profileError) {
     console.warn("ensureAdmin: failed to load profile", profileError);
@@ -43,28 +46,27 @@ async function ensureAdmin() {
     return null;
   }
 
-  const profile = Array.isArray(profiles) ? profiles[0] : null;
-
-  if (!profile?.is_admin) {
-    console.warn("ensureAdmin: user is not admin");
+  // 查不到 / 不是管理员，直接踢回普通页面
+  if (!profile || !profile.is_admin) {
+    console.warn("ensureAdmin: user is not admin", profile);
     window.location.href = "./index.html";
     return null;
   }
 
+  // 显示邮箱
   adminEmailSpan.textContent = user.email ?? "";
   return user;
 }
 
+// 生成 CDKey
 createForm.addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  // 再次确认是管理员
   const currentUser = await ensureAdmin();
   if (!currentUser) return;
 
   const plan = document.getElementById("plan-input").value.trim() || "pro";
-  const days =
-    parseInt(document.getElementById("days-input").value, 10) || 30;
+  const days = parseInt(document.getElementById("days-input").value, 10) || 30;
   const count = Math.max(
     1,
     Math.min(
@@ -79,14 +81,14 @@ createForm.addEventListener("submit", async (e) => {
       code: generateCode(),
       plan,
       days,
-      status: "unused",
+      status: "unused", // 初始状态
     });
   }
 
   const { data, error } = await supabase
     .from("cd_keys")
     .insert(codes)
-    .select();
+    .select("code, plan, days, status, used_by, used_at");
 
   if (error) {
     console.error(error);
@@ -101,15 +103,16 @@ createForm.addEventListener("submit", async (e) => {
   await loadRecentKeys();
 });
 
+// 加载最近的 CDKey
 async function loadRecentKeys() {
   const { data, error } = await supabase
     .from("cd_keys")
-    .select("code, plan, days, status, used_at, used_by")
+    .select("code, plan, days, status, used_by, used_at")
     .order("created_at", { ascending: false })
     .limit(50);
 
   if (error) {
-    console.error(error);
+    console.error("loadRecentKeys error", error);
     return;
   }
 
@@ -128,12 +131,13 @@ async function loadRecentKeys() {
   });
 }
 
+// 退出登录
 logoutBtn.addEventListener("click", async () => {
   await supabase.auth.signOut();
   window.location.href = "./index.html";
 });
 
-// 顶层 await：先验证管理员，再加载列表
+// 页面初始化：先校验管理员，再加载列表
 const user = await ensureAdmin();
 if (user) {
   await loadRecentKeys();
