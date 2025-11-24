@@ -21,6 +21,7 @@ function generateCode() {
 }
 
 // ✅ 通过 profiles.is_admin 判断是否管理员（不在前端写死邮箱）
+//   不再用 .single()，避免 PGRST116 把人踢出去
 async function ensureAdmin() {
   const { data: userData, error: userError } = await supabase.auth.getUser();
   if (userError || !userData?.user) {
@@ -31,18 +32,18 @@ async function ensureAdmin() {
 
   const user = userData.user;
 
-  // 从 profiles 表读取 is_admin
-  const { data: profile, error: profileError } = await supabase
+  const { data: profiles, error: profileError } = await supabase
     .from("profiles")
     .select("is_admin")
-    .eq("id", user.id)
-    .single();
+    .eq("email", user.email);
 
   if (profileError) {
     console.warn("ensureAdmin: failed to load profile", profileError);
     window.location.href = "./index.html";
     return null;
   }
+
+  const profile = Array.isArray(profiles) ? profiles[0] : null;
 
   if (!profile?.is_admin) {
     console.warn("ensureAdmin: user is not admin");
