@@ -383,15 +383,16 @@ function setAuthTab(target = "login") {
   const showSignup = target === "signup";
   const nextForm = showSignup ? signupFormEl : loginFormEl;
   const prevForm = document.querySelector(".auth-form.active");
+  const switchingSameForm = prevForm && nextForm && prevForm === nextForm;
 
   if (authFormsContainer && nextForm) {
     authFormsContainer.style.height = `${nextForm.scrollHeight}px`;
   }
 
-  if (prevForm && !prefersReducedMotion) {
+  if (prevForm && !prefersReducedMotion && !switchingSameForm) {
     prevForm.classList.add("animating-out");
     setTimeout(() => prevForm.classList.remove("active", "animating-out"), 200);
-  } else {
+  } else if (!switchingSameForm) {
     prevForm?.classList.remove("active", "animating-out");
   }
 
