@@ -237,7 +237,29 @@
           <input type="email" id="assign-email" placeholder="user@example.com" />
           <button type="submit" class="primary-btn" data-i18n="assignSubmit">确认分配</button>
         </form>
+        <p id="assign-selected-count" class="status-text" data-i18n="assignSelected" data-count="0">已选择 0 个 CDKey</p>
+        <div class="assign-picker">
+          <div class="split-head">
+            <h4 data-i18n="assignUserPicker">选择用户</h4>
+            <span class="sub-text" data-i18n="assignUserHint">输入邮箱或点击下方用户填充</span>
+          </div>
+          <div id="assign-user-list" class="assign-user-list"></div>
+        </div>
         <p id="assign-status" class="status-text"></p>
+      </div>
+    </div>
+
+    <div class="modal" id="delete-confirm-modal" aria-hidden="true">
+      <div class="modal-content glass">
+        <div class="split-head">
+          <h3 data-i18n="deleteConfirmTitle">确认删除选中 CDKey？</h3>
+          <button type="button" class="icon-btn" id="close-delete-confirm" aria-label="close">✕</button>
+        </div>
+        <p id="delete-confirm-desc" class="sub-text" data-i18n="deleteConfirmDesc">你将删除 0 个未使用的 CDKey，此操作不可恢复。</p>
+        <div class="modal-actions">
+          <button type="button" class="ghost-btn" id="cancel-delete" data-i18n="cancel">取消</button>
+          <button type="button" class="danger-btn" id="confirm-delete" data-i18n="deleteConfirm">确认删除</button>
+        </div>
       </div>
     </div>
   </main>
