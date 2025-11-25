@@ -76,6 +76,14 @@ const translations = {
     assignTitle: "分配给用户",
     assignDesc: "输入用户邮箱或选择用户，确认后将选中 CDKey 分配给对方。",
     assignSubmit: "确认分配",
+    assignSelected: "已选择 {count} 个 CDKey",
+    assignUserPicker: "选择用户",
+    assignUserHint: "输入邮箱或点击下方用户填充",
+    assignUserEmpty: "暂无可用用户",
+    deleteConfirmTitle: "确认删除选中 CDKey？",
+    deleteConfirmDesc: "你将删除 {count} 个未使用的 CDKey，此操作不可恢复。",
+    deleteConfirm: "确认删除",
+    cancel: "取消",
   },
   "zh-Hant": {
     brandAdmin: "GSearch Admin",
@@ -143,6 +151,14 @@ const translations = {
     assignTitle: "分配給用戶",
     assignDesc: "輸入用戶郵箱或選擇用戶，確認後將選中 CDKey 分配給對方。",
     assignSubmit: "確認分配",
+    assignSelected: "已選擇 {count} 個 CDKey",
+    assignUserPicker: "選擇用戶",
+    assignUserHint: "輸入郵箱或點擊下方用戶填充",
+    assignUserEmpty: "暫無可用用戶",
+    deleteConfirmTitle: "確認刪除選中 CDKey？",
+    deleteConfirmDesc: "你將刪除 {count} 個未使用的 CDKey，此操作不可恢復。",
+    deleteConfirm: "確認刪除",
+    cancel: "取消",
   },
   en: {
     brandAdmin: "GSearch Admin",
@@ -210,6 +226,14 @@ const translations = {
     assignTitle: "Assign to user",
     assignDesc: "Enter user email to assign selected CDKeys.",
     assignSubmit: "Assign",
+    assignSelected: "Selected {count} CDKeys",
+    assignUserPicker: "Pick a user",
+    assignUserHint: "Type or tap a user below to fill email",
+    assignUserEmpty: "No users available",
+    deleteConfirmTitle: "Delete selected CDKeys?",
+    deleteConfirmDesc: "You are deleting {count} unused CDKeys. This cannot be undone.",
+    deleteConfirm: "Delete",
+    cancel: "Cancel",
   },
 };
 
@@ -266,6 +290,8 @@ function applyStaticTranslations() {
   if (logoutBtn) logoutBtn.textContent = t("logout");
 
   updatePills();
+  updateAssignSelectedCopy();
+  updateDeleteConfirmCopy();
 }
 
 function updatePills() {
@@ -279,6 +305,19 @@ function updatePills() {
     usedWrapper.innerHTML = t("pillUsed", { count: `<strong id="used-count">${usedCountSpan.textContent}</strong>` });
     usedCountSpan = document.getElementById("used-count");
   }
+}
+
+function updateAssignSelectedCopy() {
+  if (!assignSelectedCount) return;
+  const count = selectedCodes.size;
+  assignSelectedCount.textContent = t("assignSelected", { count });
+  assignSelectedCount.setAttribute("data-count", String(count));
+}
+
+function updateDeleteConfirmCopy() {
+  if (!deleteConfirmDesc) return;
+  const count = selectedCodes.size;
+  deleteConfirmDesc.textContent = t("deleteConfirmDesc", { count });
 }
 
 function buildDailySeries(rows, key) {
@@ -381,7 +420,14 @@ const assignModal = document.getElementById("assign-modal");
 const assignForm = document.getElementById("assign-form");
 const assignEmailInput = document.getElementById("assign-email");
 const assignStatus = document.getElementById("assign-status");
+const assignSelectedCount = document.getElementById("assign-selected-count");
+const assignUserList = document.getElementById("assign-user-list");
 const closeAssignBtn = document.getElementById("close-assign");
+const deleteConfirmModal = document.getElementById("delete-confirm-modal");
+const deleteConfirmDesc = document.getElementById("delete-confirm-desc");
+const closeDeleteConfirmBtn = document.getElementById("close-delete-confirm");
+const cancelDeleteBtn = document.getElementById("cancel-delete");
+const confirmDeleteBtn = document.getElementById("confirm-delete");
 
 const THEME_KEY = "gsearch-theme";
 
@@ -404,6 +450,8 @@ let analyticsState = {
     redeem: { labels: [], values: [], color: "#7d89ff" },
   },
 };
+let adminUsers = [];
+let assignTargetUserId = null;
 
 /**
  * 更新切换按钮的选中态，保持 Apple 风格的胶囊高亮。
@@ -839,9 +887,10 @@ async function loadUsers(page = 1) {
   }
 
   if (userTableBody) userTableBody.innerHTML = "";
-  data.forEach((user) => {
+  adminUsers = data.map((user) => {
     const sub = subMap.get(user.id);
     const subMeta = formatSubscription(sub);
+    const enriched = { ...user, subscription: subMeta };
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${user.email}</td>
@@ -849,9 +898,12 @@ async function loadUsers(page = 1) {
       <td>${subMeta.expire}</td>
       <td>${user.is_admin ? "Yes" : "No"}</td>
     `;
-    tr.addEventListener("click", () => selectUser(user));
+    tr.addEventListener("click", () => selectUser(enriched));
     userTableBody?.appendChild(tr);
+    return enriched;
   });
+
+  renderAssignUserList(assignEmailInput?.value?.trim() || "");
 }
 
 async function loadUserDetail(user) {
@@ -897,6 +949,40 @@ async function selectUser(user) {
   await loadUserDetail(user);
 }
 
+function renderAssignUserList(filter = "") {
+  if (!assignUserList) return;
+  const keyword = filter.toLowerCase();
+  assignUserList.innerHTML = "";
+
+  const list = (adminUsers || [])
+    .filter((u) => !keyword || u.email?.toLowerCase().includes(keyword))
+    .slice(0, 10);
+
+  if (!list.length) {
+    const empty = document.createElement("div");
+    empty.className = "assign-user-empty";
+    empty.textContent = t("assignUserEmpty");
+    assignUserList.appendChild(empty);
+    return;
+  }
+
+  list.forEach((user) => {
+    const item = document.createElement("button");
+    item.type = "button";
+    item.className = "assign-user-item";
+    item.innerHTML = `
+      <div class="email">${user.email}</div>
+      <div class="sub">${user.subscription?.label || "—"}</div>
+    `;
+    item.addEventListener("click", () => {
+      if (assignEmailInput) assignEmailInput.value = user.email;
+      assignTargetUserId = user.id;
+      if (assignStatus) assignStatus.textContent = `${user.email}`;
+    });
+    assignUserList.appendChild(item);
+  });
+}
+
 function switchStatus(status) {
   currentStatus = status;
 
@@ -914,8 +1000,10 @@ function switchStatus(status) {
 function updateBulkButtons() {
   const hasSelection = selectedCodes.size > 0;
   if (bulkDeleteBtn) bulkDeleteBtn.disabled = !hasSelection;
-  if (bulkAssignBtn) bulkAssignBtn.disabled = !hasSelection;
+  if (bulkAssignBtn) bulkAssignBtn.disabled = !hasSelection || currentStatus !== "unused";
   if (selectAllCheckbox) selectAllCheckbox.checked = hasSelection && selectedCodes.size >= (cdkeyTableBody?.querySelectorAll(".row-select")?.length || 0);
+  updateAssignSelectedCopy();
+  updateDeleteConfirmCopy();
 }
 
 segmentTabs.forEach((tab) => {
@@ -960,49 +1048,82 @@ userSearchInput?.addEventListener(
 adminRedeemForm?.addEventListener("submit", async (e) => {
   e.preventDefault();
   if (!selectedUser) {
-    adminRedeemStatus.textContent = "请选择用户";
+    adminRedeemStatus.textContent = "请先在用户列表中选择一个用户";
     return;
   }
   const code = adminRedeemInput.value.trim();
   if (!code) {
-    adminRedeemStatus.textContent = "请输入 CDKey";
+    adminRedeemStatus.textContent = "请输入要兑换的 CDKey";
     return;
   }
   adminRedeemStatus.textContent = "处理中...";
   try {
     await redeemCdkeyForUser(selectedUser.id, code);
-    adminRedeemStatus.textContent = "已提交兑换";
+    adminRedeemStatus.textContent = `已为 ${selectedUser.email} 成功兑换 1 个 CDKey`;
     adminRedeemInput.value = "";
     await loadUserDetail(selectedUser);
     await refreshCounts();
     await loadCdkeys(currentStatus, pageState[currentStatus]);
   } catch (err) {
-    adminRedeemStatus.textContent = err.message || "失败";
+    adminRedeemStatus.textContent = err.message || "兑换失败";
   }
 });
 
-bulkDeleteBtn?.addEventListener("click", () => deleteSelectedCodes());
+bulkDeleteBtn?.addEventListener("click", () => openDeleteConfirm());
 bulkAssignBtn?.addEventListener("click", () => toggleAssignModal(true));
 closeAssignBtn?.addEventListener("click", () => toggleAssignModal(false));
+assignEmailInput?.addEventListener("input", () => {
+  assignTargetUserId = null;
+  renderAssignUserList(assignEmailInput.value.trim());
+});
+closeDeleteConfirmBtn?.addEventListener("click", () => toggleDeleteConfirm(false));
+cancelDeleteBtn?.addEventListener("click", () => toggleDeleteConfirm(false));
+confirmDeleteBtn?.addEventListener("click", async () => {
+  const codes = Array.from(selectedCodes);
+  if (!codes.length) return;
+  try {
+    await deleteSelectedCodes(codes);
+    if (deleteConfirmDesc) deleteConfirmDesc.textContent = `已删除 ${codes.length} 个 CDKey`;
+    toggleDeleteConfirm(false);
+    updateBulkButtons();
+  } catch (err) {
+    // deleteSelectedCodes 已处理错误提示
+  }
+});
 
 assignForm?.addEventListener("submit", async (e) => {
   e.preventDefault();
-  if (!selectedCodes.size) return;
+  const codes = currentStatus === "unused" ? Array.from(selectedCodes) : [];
+  if (!codes.length) {
+    if (assignStatus) assignStatus.textContent = "请先选择至少一个 CDKey";
+    return;
+  }
+  const email = assignEmailInput?.value?.trim();
+  if (!email) {
+    if (assignStatus) assignStatus.textContent = "请输入或选择目标用户邮箱";
+    return;
+  }
+
   if (assignStatus) assignStatus.textContent = "处理中...";
   try {
-    const email = assignEmailInput?.value?.trim();
-    if (!email) {
-      if (assignStatus) assignStatus.textContent = "请输入邮箱";
-      return;
-    }
-    await assignCdkeysToUser(email, Array.from(selectedCodes));
-    if (assignStatus) assignStatus.textContent = "已提交分配";
+    const result = await assignCdkeysToUser(email, codes);
+    const successCount = result?.filter((row) => row.result === "ok").length || 0;
+    const failed = result?.filter((row) => row.result?.startsWith("error"))?.length || 0;
+    assignStatus.textContent = failed
+      ? `成功为 ${email} 分配 ${successCount} 个 CDKey，有 ${failed} 个失败，请检查日志或 CDKey 状态`
+      : `成功为 ${email} 分配 ${successCount} 个 CDKey`;
     toggleAssignModal(false);
+    const targetId = assignTargetUserId;
+    assignTargetUserId = null;
+    if (assignEmailInput) assignEmailInput.value = "";
     selectedCodes.clear();
     await refreshCounts();
     await loadCdkeys(currentStatus, pageState[currentStatus]);
+    if (selectedUser && (selectedUser.id === targetId || selectedUser.email === email)) {
+      await loadUserDetail(selectedUser);
+    }
   } catch (err) {
-    if (assignStatus) assignStatus.textContent = err.message || "失败";
+    if (assignStatus) assignStatus.textContent = err.message || "分配失败";
   }
 });
 
@@ -1030,37 +1151,63 @@ function debounce(fn, delay = 200) {
 }
 
 async function redeemCdkeyForUser(userId, code) {
-  // TODO: 后端 RPC admin_redeem_code_for_user 以便管理员代用户兑换
-  const { data, error } = await supabase.rpc("admin_redeem_code_for_user", { user_id: userId, code });
-  if (error) throw error;
-  return data;
+  try {
+    const { data, error } = await supabase.rpc("admin_redeem_code_for_user", { code, user_id: userId });
+    if (error) throw error;
+    return data;
+  } catch (err) {
+    throw new Error(err.message || "兑换失败");
+  }
 }
 
 async function assignCdkeysToUser(email, codes) {
-  // TODO: 后端 RPC assign_cdkeys_to_user(email, codes[]) 实现批量分配
-  const { data, error } = await supabase.rpc("assign_cdkeys_to_user", { email, codes });
-  if (error) throw error;
-  return data;
+  try {
+    const { data, error } = await supabase.rpc("assign_cdkeys_to_user", { codes, user_email: email });
+    if (error) throw error;
+    return data;
+  } catch (err) {
+    throw new Error(err.message || "分配失败");
+  }
 }
 
-async function deleteSelectedCodes() {
-  if (!selectedCodes.size) return;
-  const codes = Array.from(selectedCodes);
-  const { error } = await supabase.from("cd_keys").delete().in("code", codes);
-  if (error) {
-    console.error("deleteSelectedCodes", error);
-    return;
+async function deleteSelectedCodes(codes = Array.from(selectedCodes)) {
+  if (!codes.length) return;
+  try {
+    const { error } = await supabase.from("cd_keys").delete().in("code", codes);
+    if (error) throw error;
+    selectedCodes.clear();
+    await refreshCounts();
+    await loadCdkeys(currentStatus, pageState[currentStatus]);
+  } catch (err) {
+    console.error("deleteSelectedCodes", err);
+    if (deleteConfirmDesc) deleteConfirmDesc.textContent = err.message || "删除失败";
+    throw err;
   }
-  selectedCodes.clear();
-  await refreshCounts();
-  await loadCdkeys(currentStatus, pageState[currentStatus]);
+}
+
+function toggleDeleteConfirm(show) {
+  if (!deleteConfirmModal) return;
+  deleteConfirmModal.classList.toggle("active", !!show);
+  deleteConfirmModal.setAttribute("aria-hidden", show ? "false" : "true");
+}
+
+function openDeleteConfirm() {
+  if (!selectedCodes.size) return;
+  updateDeleteConfirmCopy();
+  toggleDeleteConfirm(true);
 }
 
 function toggleAssignModal(show) {
   if (!assignModal) return;
   assignModal.classList.toggle("active", !!show);
   assignModal.setAttribute("aria-hidden", show ? "false" : "true");
-  if (show) assignEmailInput?.focus();
+  if (show) {
+    if (assignStatus) assignStatus.textContent = "";
+    assignTargetUserId = null;
+    updateAssignSelectedCopy();
+    renderAssignUserList(assignEmailInput?.value?.trim() || "");
+    assignEmailInput?.focus();
+  }
 }
 
 // 退出登录
