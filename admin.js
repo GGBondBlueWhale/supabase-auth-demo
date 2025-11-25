@@ -305,16 +305,18 @@ function buildDailySeries(rows, key) {
   return { labels, values };
 }
 
-function renderLineChart(ctx, labels, data, color) {
+function renderLineChart(ctx, dataset) {
   if (!ctx || typeof Chart === "undefined") return null;
+  const source = dataset || { labels: [], values: [], color: "#5ac8fa" };
+
   return new Chart(ctx, {
     type: "line",
     data: {
-      labels,
+      labels: source.labels,
       datasets: [
         {
-          data,
-          borderColor: color,
+          data: source.values,
+          borderColor: source.color,
           backgroundColor: "transparent",
           borderWidth: 2,
           tension: 0.35,
@@ -357,8 +359,9 @@ const kpiUsers = document.getElementById("kpi-users");
 const kpiActive = document.getElementById("kpi-active");
 const kpiCdkeyTotal = document.getElementById("kpi-cdkey-total");
 const kpiCdkeySplit = document.getElementById("kpi-cdkey-split");
-const chartUsersEl = document.getElementById("chart-users");
-const chartRedeemEl = document.getElementById("chart-redeem");
+const analyticsCanvas = document.getElementById("chart-analytics");
+const analyticsStage = document.querySelector(".chart-stage");
+const chartToggleButtons = document.querySelectorAll("[data-chart-type]");
 const userTableBody = document.querySelector("#user-table tbody");
 const userSearchInput = document.getElementById("user-search");
 const userPrevBtn = document.getElementById("user-prev");
@@ -390,8 +393,70 @@ let totalUserPages = 1;
 let userSearchTerm = "";
 let selectedUser = null;
 let selectedCodes = new Set();
-let userChart = null;
-let redeemChart = null;
+let analyticsChart = null;
+let analyticsData = {
+  signup: { labels: [], values: [], color: "#5ac8fa" },
+  redeem: { labels: [], values: [], color: "#7d89ff" },
+};
+let activeChartType = "signup";
+
+/**
+ * 更新切换按钮的选中态，保持 Apple 风格的胶囊高亮。
+ */
+function updateChartToggle(type) {
+  chartToggleButtons.forEach((btn) => {
+    const isActive = btn.dataset.chartType === type;
+    btn.classList.toggle("active", isActive);
+    btn.setAttribute("aria-selected", isActive ? "true" : "false");
+    btn.setAttribute("aria-pressed", isActive ? "true" : "false");
+  });
+}
+
+/**
+ * 在切换数据时做一个轻微的淡入/下滑动画，偏 Apple 味道。
+ */
+function animateChartStage() {
+  if (!analyticsStage) return;
+  analyticsStage.classList.add("is-switching");
+  setTimeout(() => analyticsStage.classList.remove("is-switching"), 200);
+}
+
+/**
+ * 切换 chart.js 数据集而不重新创建 canvas，避免高度异常。
+ */
+function showChart(type) {
+  if (!analyticsChart && analyticsCanvas) {
+    analyticsChart = renderLineChart(analyticsCanvas, analyticsData[type]);
+  }
+  if (!analyticsChart || !analyticsData[type]) return;
+
+  activeChartType = type;
+  updateChartToggle(type);
+  analyticsChart.data.labels = analyticsData[type].labels;
+  analyticsChart.data.datasets[0].data = analyticsData[type].values;
+  analyticsChart.data.datasets[0].borderColor = analyticsData[type].color;
+  animateChartStage();
+  analyticsChart.update();
+}
+
+/**
+ * 初始化分析图表，集中处理所有绑定与销毁逻辑。
+ */
+function initAnalyticsCharts() {
+  if (!analyticsCanvas) return;
+  if (analyticsChart) analyticsChart.destroy();
+  analyticsChart = renderLineChart(analyticsCanvas, analyticsData[activeChartType]);
+  showChart(activeChartType);
+
+  chartToggleButtons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const nextType = btn.dataset.chartType;
+      if (nextType && nextType !== activeChartType) {
+        showChart(nextType);
+      }
+    });
+  });
+}
 
 function getStatusCopy(status) {
   return {
@@ -638,10 +703,17 @@ async function loadAdminAnalytics() {
   const { labels: userLabels, values: userValues } = buildDailySeries(recentProfiles || [], "created_at");
   const { labels: redeemLabels, values: redeemValues } = buildDailySeries(recentRedeems || [], "used_at");
 
-  if (userChart) userChart.destroy();
-  if (redeemChart) redeemChart.destroy();
-  userChart = renderLineChart(chartUsersEl, userLabels, userValues, "#5ac8fa");
-  redeemChart = renderLineChart(chartRedeemEl, redeemLabels, redeemValues, "#7d89ff");
+  analyticsData = {
+    signup: { labels: userLabels, values: userValues, color: "#5ac8fa" },
+    redeem: { labels: redeemLabels, values: redeemValues, color: "#7d89ff" },
+  };
+
+  // 初始化或更新单个 Chart 实例，避免重复创建导致的高度递增。
+  if (!analyticsChart) {
+    initAnalyticsCharts();
+  } else {
+    showChart(activeChartType);
+  }
 }
 
 async function loadCdkeys(status, page = 1) {

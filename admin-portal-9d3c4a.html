@@ -68,19 +68,26 @@
         </div>
       </div>
       <div class="chart-row">
-        <div class="mini-chart">
+        <div class="mini-chart analytics-stage">
           <div class="chart-head flex-between">
-            <h4 data-i18n="chartUsers">最近 7 天新注册</h4>
+            <div class="chart-toggle" role="tablist" aria-label="Analytics switcher">
+              <button
+                class="chart-pill active"
+                data-chart-type="signup"
+                role="tab"
+                aria-selected="true"
+              >
+                <span class="tab-title" data-i18n="chartUsers">最近 7 天新注册</span>
+              </button>
+              <button class="chart-pill" data-chart-type="redeem" role="tab" aria-selected="false">
+                <span class="tab-title" data-i18n="chartRedeem">最近 7 天兑换</span>
+              </button>
+            </div>
             <span class="tag">7d</span>
           </div>
-          <canvas id="chart-users" height="120"></canvas>
-        </div>
-        <div class="mini-chart">
-          <div class="chart-head flex-between">
-            <h4 data-i18n="chartRedeem">最近 7 天兑换</h4>
-            <span class="tag">7d</span>
+          <div class="chart-stage" aria-live="polite">
+            <canvas id="chart-analytics" class="chart-canvas"></canvas>
           </div>
-          <canvas id="chart-redeem" height="120"></canvas>
         </div>
       </div>
     </section>
