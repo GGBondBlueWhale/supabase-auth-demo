@@ -244,25 +244,21 @@ body.app-body {
 .auth-forms {
   position: relative;
   min-height: 230px;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .auth-form {
-  position: absolute;
-  inset: 0;
-  display: flex;
+  position: relative;
+  display: none;
   flex-direction: column;
   gap: 12px;
-  opacity: 0;
-  transform: translateY(12px);
-  pointer-events: none;
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
 }
 
 .auth-form.active {
-  opacity: 1;
-  transform: translateY(0);
-  pointer-events: auto;
+  display: flex;
 }
 
 .form label {
