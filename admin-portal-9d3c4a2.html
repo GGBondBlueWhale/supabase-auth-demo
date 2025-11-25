@@ -8,49 +8,63 @@
 </head>
 <body class="app-body">
   <div class="bg-gradient"></div>
+  <svg aria-hidden="true" focusable="false" class="defs" width="0" height="0" style="position:absolute">
+    <defs>
+      <linearGradient id="admin-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#5ac8fa" />
+        <stop offset="100%" stop-color="#7d89ff" />
+      </linearGradient>
+    </defs>
+  </svg>
 
   <header class="top-bar glass">
-    <div class="logo">GSearch Admin</div>
+    <div class="logo" data-i18n="brandAdmin">GSearch Admin</div>
     <div class="top-bar-right">
+      <button id="lang-toggle" class="icon-btn" aria-label="Language" title="Language">
+        <span class="lang-icon">中</span>
+      </button>
+      <button id="theme-toggle" class="icon-btn" aria-label="切换深浅色">
+        <span class="theme-icon" aria-hidden="true"></span>
+      </button>
       <span id="admin-email" class="user-email"></span>
-      <button id="admin-logout-btn" class="ghost-btn">退出</button>
+      <button id="admin-logout-btn" class="ghost-btn" data-i18n="logout">退出</button>
     </div>
   </header>
 
   <main class="main-container">
     <section class="hero-banner flex-between">
       <div>
-        <p class="capsule-label">管理中心</p>
-        <h1>生成与追踪 CDKey</h1>
-        <p>面向管理员的兑换码管理面板，快速生成、查看最近使用情况。</p>
+        <p class="capsule-label" data-i18n="heroTag">管理中心</p>
+        <h1 data-i18n="heroTitle">生成与追踪 CDKey</h1>
+        <p data-i18n="heroDesc">面向管理员的兑换码管理面板，快速生成、查看最近使用情况。</p>
       </div>
-      <div class="status-chip">仅管理员可见</div>
+      <div class="status-chip" data-i18n="heroBadge">仅管理员可见</div>
     </section>
 
     <section class="card glass action-card">
       <div class="flex-between">
         <div>
-          <p class="capsule-label">批量生成</p>
-          <h2>生成 CDKey</h2>
-          <p class="sub-text">设定套餐、天数与数量，一键生成并复制保存。</p>
+          <p class="capsule-label" data-i18n="createTag">批量生成</p>
+          <h2 data-i18n="createTitle">生成 CDKey</h2>
+          <p class="sub-text" data-i18n="createDesc">设定套餐、天数与数量，一键生成并复制保存。</p>
         </div>
       </div>
       <form id="create-cdkey-form" class="form-inline">
-        <input id="plan-input" type="text" placeholder="套餐名，如 pro" value="pro" />
-        <input id="days-input" type="number" placeholder="天数，如 30" value="30" />
-        <input id="count-input" type="number" placeholder="数量，如 5" value="1" />
-        <button type="submit" class="primary-btn">生成</button>
+        <input id="plan-input" type="text" placeholder="套餐名，如 pro" value="pro" data-i18n-placeholder="planPlaceholder" />
+        <input id="days-input" type="number" placeholder="天数，如 30" value="30" data-i18n-placeholder="daysPlaceholder" />
+        <input id="count-input" type="number" placeholder="数量，如 5" value="1" data-i18n-placeholder="countPlaceholder" />
+        <button type="submit" class="primary-btn" data-i18n="createSubmit">生成</button>
       </form>
-      <p class="hint">生成的兑换码仅管理员可见，用户只能拿到你发给他的码。</p>
+      <p class="hint" data-i18n="createHint">生成的兑换码仅管理员可见，用户只能拿到你发给他的码。</p>
       <pre id="created-codes" class="codes-output"></pre>
     </section>
 
     <section class="card glass cdkey-segment">
       <div class="flex-between section-head">
         <div>
-          <p class="capsule-label">记录</p>
-          <h2>最近生成 / 使用的 CDKey</h2>
-          <p class="sub-text">自动按照「未使用」与「已使用」分区，切换查看更清晰。</p>
+          <p class="capsule-label" data-i18n="listTag">记录</p>
+          <h2 data-i18n="listTitle">最近生成 / 使用的 CDKey</h2>
+          <p class="sub-text" data-i18n="listDesc">自动按照「未使用」与「已使用」分区，切换查看更清晰。</p>
         </div>
       </div>
 
@@ -61,12 +75,12 @@
           role="tab"
           aria-selected="true"
         >
-          <span class="tab-title">未使用</span>
-          <span class="tab-sub">等待发放</span>
+          <span class="tab-title" data-i18n="tabUnused">未使用</span>
+          <span class="tab-sub" data-i18n="tabUnusedDesc">等待发放</span>
         </button>
         <button class="segment-tab" data-status="used" role="tab" aria-selected="false">
-          <span class="tab-title">已使用</span>
-          <span class="tab-sub">兑换记录</span>
+          <span class="tab-title" data-i18n="tabUsed">已使用</span>
+          <span class="tab-sub" data-i18n="tabUsedDesc">兑换记录</span>
         </button>
       </div>
 
@@ -85,25 +99,25 @@
 
           <div class="table-toolbar">
             <div class="table-meta">
-              <span class="pill success">未使用：<strong id="unused-count">0</strong></span>
-              <span class="pill muted">已使用：<strong id="used-count">0</strong></span>
+              <span class="pill success" data-i18n-scope="unused">未使用：<strong id="unused-count">0</strong></span>
+              <span class="pill muted" data-i18n-scope="used">已使用：<strong id="used-count">0</strong></span>
             </div>
             <div class="pagination-controls">
-              <button id="prev-page-btn" class="ghost-btn nav-btn" type="button">上一页</button>
+              <button id="prev-page-btn" class="ghost-btn nav-btn" type="button" data-i18n="prevPage">上一页</button>
               <span id="page-info" class="page-info">第 1 / 1 页（共 0 条）</span>
-              <button id="next-page-btn" class="ghost-btn nav-btn" type="button">下一页</button>
+              <button id="next-page-btn" class="ghost-btn nav-btn" type="button" data-i18n="nextPage">下一页</button>
             </div>
           </div>
 
           <table id="cdkey-table" class="cdkey-table">
             <thead>
               <tr>
-                <th>Code</th>
-                <th>Plan</th>
-                <th>Days</th>
-                <th>Status</th>
-                <th>Used By</th>
-                <th>Used At</th>
+                <th data-i18n="thCode">Code</th>
+                <th data-i18n="thPlan">Plan</th>
+                <th data-i18n="thDays">Days</th>
+                <th data-i18n="thStatus">Status</th>
+                <th data-i18n="thUsedBy">Used By</th>
+                <th data-i18n="thUsedAt">Used At</th>
               </tr>
             </thead>
             <tbody></tbody>
