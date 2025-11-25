@@ -1067,33 +1067,39 @@ input:focus {
 }
 
 .chart-pill {
-  border: none;
-  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--panel-hover) 70%, var(--panel) 30%);
+  background: color-mix(in srgb, var(--panel) 80%, var(--panel-hover));
   color: var(--text-sub);
   padding: 8px 14px;
   border-radius: 999px;
-  font-size: 14px;
+  font-size: 13px;
   cursor: pointer;
-  transition: color 180ms ease, background 180ms ease, transform 200ms ease;
+  opacity: 0.72;
+  transition: opacity 200ms ease, background 220ms ease, box-shadow 220ms ease, color 180ms ease,
+    transform 200ms ease;
 }
 
 .chart-pill:hover,
 .chart-pill:focus-visible {
   color: var(--text);
-  background: color-mix(in srgb, var(--panel-hover) 80%, var(--panel) 20%);
+  opacity: 0.95;
+  background: color-mix(in srgb, var(--panel-hover) 86%, var(--panel));
   transform: translateY(-1px);
 }
 
 .chart-pill.active {
-  background: linear-gradient(120deg, #5ac8fa, #7d89ff);
-  color: #0b1725;
-  box-shadow: 0 8px 24px rgba(90, 200, 250, 0.18);
+  opacity: 1;
+  background: linear-gradient(140deg, rgba(90, 200, 250, 0.22), rgba(125, 137, 255, 0.28));
+  color: var(--text);
+  box-shadow: 0 8px 30px rgba(90, 200, 250, 0.16);
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 .chart-stage {
   position: relative;
-  height: 280px;
-  padding: 6px 2px;
+  width: 100%;
+  height: clamp(220px, 32vw, 320px);
+  padding: 8px 4px;
   border-radius: 12px;
   overflow: hidden;
   background: color-mix(in srgb, var(--panel) 70%, var(--panel-hover));
@@ -1101,13 +1107,13 @@ input:focus {
 }
 
 .chart-stage.is-switching {
-  opacity: 0.7;
+  opacity: 0.75;
   transform: translateY(6px);
 }
 
 .chart-canvas {
-  width: 100%;
-  height: 100%;
+  width: 100% !important;
+  height: 100% !important;
   display: block;
 }
 

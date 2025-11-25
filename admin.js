@@ -330,7 +330,10 @@ function renderLineChart(ctx, dataset) {
         x: { ticks: { color: "var(--text-sub)", maxRotation: 0 }, grid: { display: false } },
         y: { ticks: { color: "var(--text-sub)", stepSize: 1 }, grid: { color: "rgba(255,255,255,0.08)" } },
       },
-      animation: false,
+      animation: {
+        duration: 420,
+        easing: "easeInOutQuad",
+      },
       responsive: true,
       maintainAspectRatio: false,
     },
@@ -394,11 +397,13 @@ let userSearchTerm = "";
 let selectedUser = null;
 let selectedCodes = new Set();
 let analyticsChart = null;
-let analyticsData = {
-  signup: { labels: [], values: [], color: "#5ac8fa" },
-  redeem: { labels: [], values: [], color: "#7d89ff" },
+let analyticsState = {
+  activeTab: "signup",
+  datasets: {
+    signup: { labels: [], values: [], color: "#5ac8fa" },
+    redeem: { labels: [], values: [], color: "#7d89ff" },
+  },
 };
-let activeChartType = "signup";
 
 /**
  * 更新切换按钮的选中态，保持 Apple 风格的胶囊高亮。
@@ -424,17 +429,15 @@ function animateChartStage() {
 /**
  * 切换 chart.js 数据集而不重新创建 canvas，避免高度异常。
  */
-function showChart(type) {
-  if (!analyticsChart && analyticsCanvas) {
-    analyticsChart = renderLineChart(analyticsCanvas, analyticsData[type]);
-  }
-  if (!analyticsChart || !analyticsData[type]) return;
+function updateAnalyticsChart(type) {
+  if (!analyticsChart || !analyticsState.datasets[type]) return;
 
-  activeChartType = type;
+  analyticsState.activeTab = type;
   updateChartToggle(type);
-  analyticsChart.data.labels = analyticsData[type].labels;
-  analyticsChart.data.datasets[0].data = analyticsData[type].values;
-  analyticsChart.data.datasets[0].borderColor = analyticsData[type].color;
+  const dataset = analyticsState.datasets[type];
+  analyticsChart.data.labels = dataset.labels;
+  analyticsChart.data.datasets[0].data = dataset.values;
+  analyticsChart.data.datasets[0].borderColor = dataset.color;
   animateChartStage();
   analyticsChart.update();
 }
@@ -444,15 +447,16 @@ function showChart(type) {
  */
 function initAnalyticsCharts() {
   if (!analyticsCanvas) return;
+  const ctx = analyticsCanvas.getContext("2d");
   if (analyticsChart) analyticsChart.destroy();
-  analyticsChart = renderLineChart(analyticsCanvas, analyticsData[activeChartType]);
-  showChart(activeChartType);
+  analyticsChart = renderLineChart(ctx, analyticsState.datasets[analyticsState.activeTab]);
+  updateAnalyticsChart(analyticsState.activeTab);
 
   chartToggleButtons.forEach((btn) => {
     btn.addEventListener("click", () => {
       const nextType = btn.dataset.chartType;
-      if (nextType && nextType !== activeChartType) {
-        showChart(nextType);
+      if (nextType && nextType !== analyticsState.activeTab) {
+        updateAnalyticsChart(nextType);
       }
     });
   });
@@ -703,7 +707,7 @@ async function loadAdminAnalytics() {
   const { labels: userLabels, values: userValues } = buildDailySeries(recentProfiles || [], "created_at");
   const { labels: redeemLabels, values: redeemValues } = buildDailySeries(recentRedeems || [], "used_at");
 
-  analyticsData = {
+  analyticsState.datasets = {
     signup: { labels: userLabels, values: userValues, color: "#5ac8fa" },
     redeem: { labels: redeemLabels, values: redeemValues, color: "#7d89ff" },
   };
@@ -712,7 +716,7 @@ async function loadAdminAnalytics() {
   if (!analyticsChart) {
     initAnalyticsCharts();
   } else {
-    showChart(activeChartType);
+    updateAnalyticsChart(analyticsState.activeTab);
   }
 }
 
