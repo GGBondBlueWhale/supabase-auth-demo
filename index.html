@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="style.css" />
 </head>
-<body class="app-body">
+<body class="app-body app-initializing">
   <div class="bg-gradient"></div>
   <svg aria-hidden="true" focusable="false" class="defs" width="0" height="0" style="position:absolute">
     <defs>
@@ -39,7 +39,12 @@
     </div>
   </header>
 
-  <main class="main-container">
+  <main class="main-container smooth-shell">
+
+    <div class="app-loader" id="app-loader">
+      <div class="loader-dot"></div>
+      <p class="loader-text" data-i18n="loadingText">正在载入…</p>
+    </div>
 
     <!-- 登录/注册区域 -->
     <section id="auth-section" class="auth-layout">

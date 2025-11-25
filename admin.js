@@ -55,6 +55,27 @@ const translations = {
     emptyUsed: "暂无已使用的兑换码",
     createFailed: "生成失败：{error}",
     ensureAdminFail: "非管理员，已返回首页。",
+    statusActive: "订阅中",
+    statusExpired: "已过期",
+    analyticsTag: "数据报表",
+    analyticsTitle: "用户 & CDKey 概览",
+    analyticsDesc: "快速查看注册、订阅与兑换趋势。",
+    kpiUsers: "总注册用户",
+    kpiUsersSub: "最近 30 天",
+    kpiActive: "订阅中",
+    kpiActiveSub: "当前有效订阅",
+    kpiCdkeyTotal: "CDKey 总数",
+    kpiCdkeyUsed: "已使用 / 未使用",
+    chartUsers: "最近 7 天新注册",
+    chartRedeem: "最近 7 天兑换",
+    userPanelTag: "用户详情",
+    userPanelTitle: "用户概览与代填兑换",
+    userPanelDesc: "快速搜索用户、查看订阅并代为兑换 CDKey。",
+    userDetailTitle: "详情",
+    redeemForUser: "代该用户兑换",
+    assignTitle: "分配给用户",
+    assignDesc: "输入用户邮箱或选择用户，确认后将选中 CDKey 分配给对方。",
+    assignSubmit: "确认分配",
   },
   "zh-Hant": {
     brandAdmin: "GSearch Admin",
@@ -101,6 +122,27 @@ const translations = {
     emptyUsed: "暫無已使用的兌換碼",
     createFailed: "生成失敗：{error}",
     ensureAdminFail: "非管理員，已返回首頁。",
+    statusActive: "訂閱中",
+    statusExpired: "已過期",
+    analyticsTag: "數據報表",
+    analyticsTitle: "使用者 & CDKey 概覽",
+    analyticsDesc: "快速查看註冊、訂閱與兌換趨勢。",
+    kpiUsers: "總註冊用戶",
+    kpiUsersSub: "最近 30 天",
+    kpiActive: "訂閱中",
+    kpiActiveSub: "當前有效訂閱",
+    kpiCdkeyTotal: "CDKey 總數",
+    kpiCdkeyUsed: "已用 / 未用",
+    chartUsers: "最近 7 天新註冊",
+    chartRedeem: "最近 7 天兌換",
+    userPanelTag: "用戶詳情",
+    userPanelTitle: "用戶概覽與代填兌換",
+    userPanelDesc: "快速搜尋用戶、查看訂閱並代為兌換 CDKey。",
+    userDetailTitle: "詳情",
+    redeemForUser: "代該用戶兌換",
+    assignTitle: "分配給用戶",
+    assignDesc: "輸入用戶郵箱或選擇用戶，確認後將選中 CDKey 分配給對方。",
+    assignSubmit: "確認分配",
   },
   en: {
     brandAdmin: "GSearch Admin",
@@ -147,6 +189,27 @@ const translations = {
     emptyUsed: "No used CDKeys",
     createFailed: "Failed to generate: {error}",
     ensureAdminFail: "Not an admin. Redirected to home.",
+    statusActive: "Active",
+    statusExpired: "Expired",
+    analyticsTag: "Analytics",
+    analyticsTitle: "Users & CDKeys snapshot",
+    analyticsDesc: "Track registrations, subscriptions, and redemption trends.",
+    kpiUsers: "Total users",
+    kpiUsersSub: "Last 30 days",
+    kpiActive: "Active subscriptions",
+    kpiActiveSub: "Currently valid",
+    kpiCdkeyTotal: "CDKeys total",
+    kpiCdkeyUsed: "Used / unused",
+    chartUsers: "New users (7d)",
+    chartRedeem: "Redeems (7d)",
+    userPanelTag: "Users",
+    userPanelTitle: "User overview & proxy redeem",
+    userPanelDesc: "Search users, inspect subscriptions, and redeem on their behalf.",
+    userDetailTitle: "Detail",
+    redeemForUser: "Redeem for user",
+    assignTitle: "Assign to user",
+    assignDesc: "Enter user email to assign selected CDKeys.",
+    assignSubmit: "Assign",
   },
 };
 
@@ -218,6 +281,60 @@ function updatePills() {
   }
 }
 
+function buildDailySeries(rows, key) {
+  const today = new Date();
+  const labels = [];
+  const values = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    const label = `${d.getMonth() + 1}/${d.getDate()}`;
+    labels.push(label);
+    const dayStart = new Date(d);
+    dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(d);
+    dayEnd.setHours(23, 59, 59, 999);
+    const count = rows.filter((row) => {
+      const value = row[key];
+      if (!value) return false;
+      const time = new Date(value).getTime();
+      return time >= dayStart.getTime() && time <= dayEnd.getTime();
+    }).length;
+    values.push(count);
+  }
+  return { labels, values };
+}
+
+function renderLineChart(ctx, labels, data, color) {
+  if (!ctx || typeof Chart === "undefined") return null;
+  return new Chart(ctx, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [
+        {
+          data,
+          borderColor: color,
+          backgroundColor: "transparent",
+          borderWidth: 2,
+          tension: 0.35,
+          pointRadius: 0,
+        },
+      ],
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: "var(--text-sub)", maxRotation: 0 }, grid: { display: false } },
+        y: { ticks: { color: "var(--text-sub)", stepSize: 1 }, grid: { color: "rgba(255,255,255,0.08)" } },
+      },
+      animation: false,
+      responsive: true,
+      maintainAspectRatio: false,
+    },
+  });
+}
+
 const adminEmailSpan = document.getElementById("admin-email");
 const logoutBtn = document.getElementById("admin-logout-btn");
 const createForm = document.getElementById("create-cdkey-form");
@@ -236,6 +353,29 @@ const nextPageBtn = document.getElementById("next-page-btn");
 const themeToggleBtn = document.getElementById("theme-toggle");
 const themeIcon = themeToggleBtn?.querySelector(".theme-icon");
 const langToggleBtn = document.getElementById("lang-toggle");
+const kpiUsers = document.getElementById("kpi-users");
+const kpiActive = document.getElementById("kpi-active");
+const kpiCdkeyTotal = document.getElementById("kpi-cdkey-total");
+const kpiCdkeySplit = document.getElementById("kpi-cdkey-split");
+const chartUsersEl = document.getElementById("chart-users");
+const chartRedeemEl = document.getElementById("chart-redeem");
+const userTableBody = document.querySelector("#user-table tbody");
+const userSearchInput = document.getElementById("user-search");
+const userPrevBtn = document.getElementById("user-prev");
+const userNextBtn = document.getElementById("user-next");
+const userPageInfo = document.getElementById("user-page-info");
+const userDetailBody = document.getElementById("user-detail-body");
+const adminRedeemForm = document.getElementById("admin-redeem-form");
+const adminRedeemInput = document.getElementById("admin-redeem-code");
+const adminRedeemStatus = document.getElementById("admin-redeem-status");
+const bulkDeleteBtn = document.getElementById("bulk-delete");
+const bulkAssignBtn = document.getElementById("bulk-assign");
+const selectAllCheckbox = document.getElementById("select-all");
+const assignModal = document.getElementById("assign-modal");
+const assignForm = document.getElementById("assign-form");
+const assignEmailInput = document.getElementById("assign-email");
+const assignStatus = document.getElementById("assign-status");
+const closeAssignBtn = document.getElementById("close-assign");
 
 const THEME_KEY = "gsearch-theme";
 
@@ -244,6 +384,14 @@ let currentStatus = "unused";
 const pageState = { unused: 1, used: 1 };
 const totalPages = { unused: 1, used: 1 };
 const totalCounts = { unused: 0, used: 0 };
+const USER_PAGE_SIZE = 10;
+let userPage = 1;
+let totalUserPages = 1;
+let userSearchTerm = "";
+let selectedUser = null;
+let selectedCodes = new Set();
+let userChart = null;
+let redeemChart = null;
 
 function getStatusCopy(status) {
   return {
@@ -446,10 +594,62 @@ async function refreshCounts() {
   updatePills();
 }
 
+// 汇总基础指标与 7 日趋势
+async function loadAdminAnalytics() {
+  const today = new Date();
+  const since7d = new Date(today);
+  since7d.setDate(today.getDate() - 6);
+
+  const requests = await Promise.all([
+    supabase.from("profiles").select("id", { count: "exact", head: true }),
+    supabase.from("profiles").select("created_at").gte("created_at", since7d.toISOString()),
+    supabase
+      .from("subscriptions")
+      .select("id", { count: "exact", head: true })
+      .gt("expire_at", new Date().toISOString()),
+    supabase.rpc("count_cd_keys_by_status", { p_status: "used" }),
+    supabase.rpc("count_cd_keys_by_status", { p_status: "unused" }),
+    supabase
+      .from("cd_keys")
+      .select("used_at")
+      .not("used_at", "is", null)
+      .gte("used_at", since7d.toISOString()),
+  ]).catch((err) => {
+    console.error("loadAdminAnalytics", err);
+    return [];
+  });
+
+  const [profilesResp = {}, recentResp = {}, activeResp = {}, usedResp = {}, unusedResp = {}, redeemResp = {}] = requests;
+  const { count: userCount } = profilesResp;
+  const { data: recentProfiles } = recentResp;
+  const { count: activeCount } = activeResp;
+  const { data: usedCount } = usedResp;
+  const { data: unusedCount } = unusedResp;
+  const { data: recentRedeems } = redeemResp;
+
+  if (kpiUsers) kpiUsers.textContent = typeof userCount === "number" ? userCount : "—";
+  if (kpiActive) kpiActive.textContent = typeof activeCount === "number" ? activeCount : "—";
+
+  const used = typeof usedCount === "number" ? usedCount : 0;
+  const unused = typeof unusedCount === "number" ? unusedCount : 0;
+  if (kpiCdkeyTotal) kpiCdkeyTotal.textContent = used + unused;
+  if (kpiCdkeySplit) kpiCdkeySplit.textContent = `${t("kpiCdkeyUsed")}: ${used} / ${unused}`;
+
+  const { labels: userLabels, values: userValues } = buildDailySeries(recentProfiles || [], "created_at");
+  const { labels: redeemLabels, values: redeemValues } = buildDailySeries(recentRedeems || [], "used_at");
+
+  if (userChart) userChart.destroy();
+  if (redeemChart) redeemChart.destroy();
+  userChart = renderLineChart(chartUsersEl, userLabels, userValues, "#5ac8fa");
+  redeemChart = renderLineChart(chartRedeemEl, redeemLabels, redeemValues, "#7d89ff");
+}
+
 async function loadCdkeys(status, page = 1) {
   const offset = (page - 1) * PAGE_SIZE;
 
   pageState[status] = page;
+  selectedCodes.clear();
+  updateBulkButtons();
 
   const { data, error, count } = await supabase
     .from("cd_keys")
@@ -476,12 +676,13 @@ async function loadCdkeys(status, page = 1) {
   if (!data.length) {
     const emptyRow = document.createElement("tr");
     emptyRow.classList.add("empty-row");
-    emptyRow.innerHTML = `<td colspan="6">${getStatusCopy(status).empty}</td>`;
+    emptyRow.innerHTML = `<td colspan="7">${getStatusCopy(status).empty}</td>`;
     cdkeyTableBody.appendChild(emptyRow);
   } else {
     data.forEach((row) => {
       const tr = document.createElement("tr");
       tr.innerHTML = `
+        <td><input type="checkbox" class="row-select" data-code="${row.code}" /></td>
         <td>${row.code}</td>
         <td>${row.plan}</td>
         <td>${row.days}</td>
@@ -489,6 +690,16 @@ async function loadCdkeys(status, page = 1) {
         <td>${row.used_by ?? ""}</td>
         <td>${row.used_at ? new Date(row.used_at).toLocaleString() : ""}</td>
       `;
+      tr.querySelector(".row-select")?.addEventListener("change", (e) => {
+        const code = e.target.dataset.code;
+        if (!code) return;
+        if (e.target.checked) {
+          selectedCodes.add(code);
+        } else {
+          selectedCodes.delete(code);
+        }
+        updateBulkButtons();
+      });
       cdkeyTableBody.appendChild(tr);
     });
   }
@@ -503,6 +714,111 @@ async function loadCdkeys(status, page = 1) {
 
   updatePageControls();
   updatePills();
+  updateBulkButtons();
+}
+
+function formatSubscription(sub) {
+  if (!sub) return { label: "—", expire: "—" };
+  const expire = new Date(sub.expire_at);
+  const active = expire.getTime() > Date.now();
+  return {
+    label: active ? t("statusActive") || "Active" : t("statusExpired") || "Expired",
+    expire: expire.toLocaleString(),
+    plan: sub.plan,
+  };
+}
+
+async function loadUsers(page = 1) {
+  userPage = page;
+  let query = supabase
+    .from("profiles")
+    .select("id, email, is_admin, created_at", { count: "exact" })
+    .order("created_at", { ascending: false })
+    .range((page - 1) * USER_PAGE_SIZE, page * USER_PAGE_SIZE - 1);
+
+  if (userSearchTerm) {
+    query = query.ilike("email", `%${userSearchTerm}%`);
+  }
+
+  const { data, error, count } = await query;
+  if (error) {
+    console.error("loadUsers", error);
+    return;
+  }
+
+  totalUserPages = Math.max(1, Math.ceil((count || 0) / USER_PAGE_SIZE));
+  if (userPageInfo) userPageInfo.textContent = t("pageInfo", { page: userPage, total: totalUserPages, count: count || 0 });
+  if (userPrevBtn) userPrevBtn.disabled = userPage <= 1;
+  if (userNextBtn) userNextBtn.disabled = userPage >= totalUserPages;
+
+  const ids = data.map((u) => u.id);
+  let subMap = new Map();
+  if (ids.length) {
+    const { data: subs } = await supabase
+      .from("subscriptions")
+      .select("user_id, plan, expire_at")
+      .in("user_id", ids)
+      .order("expire_at", { ascending: false });
+    subMap = new Map(subs?.map((s) => [s.user_id, s]));
+  }
+
+  if (userTableBody) userTableBody.innerHTML = "";
+  data.forEach((user) => {
+    const sub = subMap.get(user.id);
+    const subMeta = formatSubscription(sub);
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${user.email}</td>
+      <td>${subMeta.label}</td>
+      <td>${subMeta.expire}</td>
+      <td>${user.is_admin ? "Yes" : "No"}</td>
+    `;
+    tr.addEventListener("click", () => selectUser(user));
+    userTableBody?.appendChild(tr);
+  });
+}
+
+async function loadUserDetail(user) {
+  if (!userDetailBody) return;
+  const { data: sub } = await supabase
+    .from("subscriptions")
+    .select("plan, expire_at")
+    .eq("user_id", user.id)
+    .order("expire_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const { data: redeems } = await supabase
+    .from("cd_keys")
+    .select("code, used_at, days")
+    .eq("used_by", user.id)
+    .order("used_at", { ascending: false })
+    .limit(5);
+
+  const subMeta = formatSubscription(sub);
+  const redeemList =
+    redeems?.map(
+      (r) => `<li><strong>${r.code}</strong> · ${r.days || "—"} 天 · ${r.used_at ? new Date(r.used_at).toLocaleString() : ""}</li>`
+    ) || [];
+
+  userDetailBody.innerHTML = `
+    <div class="info-list">
+      <div><strong>Email：</strong>${user.email}</div>
+      <div><strong>User ID：</strong>${user.id}</div>
+      <div><strong>订阅：</strong>${subMeta.plan || "—"} · ${subMeta.label}</div>
+      <div><strong>到期：</strong>${subMeta.expire}</div>
+      <div><strong>管理员：</strong>${user.is_admin ? "Yes" : "No"}</div>
+    </div>
+    <div>
+      <p class="sub-text">最近兑换</p>
+      <ul class="bullets">${redeemList.join("") || "<li>暂无记录</li>"}</ul>
+    </div>
+  `;
+}
+
+async function selectUser(user) {
+  selectedUser = user;
+  await loadUserDetail(user);
 }
 
 function switchStatus(status) {
@@ -517,6 +833,13 @@ function switchStatus(status) {
   updateSegmentCopy(status);
   updatePageControls();
   loadCdkeys(status, pageState[status]);
+}
+
+function updateBulkButtons() {
+  const hasSelection = selectedCodes.size > 0;
+  if (bulkDeleteBtn) bulkDeleteBtn.disabled = !hasSelection;
+  if (bulkAssignBtn) bulkAssignBtn.disabled = !hasSelection;
+  if (selectAllCheckbox) selectAllCheckbox.checked = hasSelection && selectedCodes.size >= (cdkeyTableBody?.querySelectorAll(".row-select")?.length || 0);
 }
 
 segmentTabs.forEach((tab) => {
@@ -542,6 +865,128 @@ nextPageBtn.addEventListener("click", () => {
   }
 });
 
+userPrevBtn?.addEventListener("click", () => {
+  if (userPage > 1) loadUsers(userPage - 1);
+});
+
+userNextBtn?.addEventListener("click", () => {
+  if (userPage < totalUserPages) loadUsers(userPage + 1);
+});
+
+userSearchInput?.addEventListener(
+  "input",
+  debounce((e) => {
+    userSearchTerm = e.target.value.trim();
+    loadUsers(1);
+  }, 280)
+);
+
+adminRedeemForm?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if (!selectedUser) {
+    adminRedeemStatus.textContent = "请选择用户";
+    return;
+  }
+  const code = adminRedeemInput.value.trim();
+  if (!code) {
+    adminRedeemStatus.textContent = "请输入 CDKey";
+    return;
+  }
+  adminRedeemStatus.textContent = "处理中...";
+  try {
+    await redeemCdkeyForUser(selectedUser.id, code);
+    adminRedeemStatus.textContent = "已提交兑换";
+    adminRedeemInput.value = "";
+    await loadUserDetail(selectedUser);
+    await refreshCounts();
+    await loadCdkeys(currentStatus, pageState[currentStatus]);
+  } catch (err) {
+    adminRedeemStatus.textContent = err.message || "失败";
+  }
+});
+
+bulkDeleteBtn?.addEventListener("click", () => deleteSelectedCodes());
+bulkAssignBtn?.addEventListener("click", () => toggleAssignModal(true));
+closeAssignBtn?.addEventListener("click", () => toggleAssignModal(false));
+
+assignForm?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if (!selectedCodes.size) return;
+  if (assignStatus) assignStatus.textContent = "处理中...";
+  try {
+    const email = assignEmailInput?.value?.trim();
+    if (!email) {
+      if (assignStatus) assignStatus.textContent = "请输入邮箱";
+      return;
+    }
+    await assignCdkeysToUser(email, Array.from(selectedCodes));
+    if (assignStatus) assignStatus.textContent = "已提交分配";
+    toggleAssignModal(false);
+    selectedCodes.clear();
+    await refreshCounts();
+    await loadCdkeys(currentStatus, pageState[currentStatus]);
+  } catch (err) {
+    if (assignStatus) assignStatus.textContent = err.message || "失败";
+  }
+});
+
+selectAllCheckbox?.addEventListener("change", (e) => {
+  const checked = e.target.checked;
+  cdkeyTableBody?.querySelectorAll(".row-select")?.forEach((box) => {
+    box.checked = checked;
+    const code = box.dataset.code;
+    if (!code) return;
+    if (checked) {
+      selectedCodes.add(code);
+    } else {
+      selectedCodes.delete(code);
+    }
+  });
+  updateBulkButtons();
+});
+
+function debounce(fn, delay = 200) {
+  let timer = null;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), delay);
+  };
+}
+
+async function redeemCdkeyForUser(userId, code) {
+  // TODO: 后端 RPC admin_redeem_code_for_user 以便管理员代用户兑换
+  const { data, error } = await supabase.rpc("admin_redeem_code_for_user", { user_id: userId, code });
+  if (error) throw error;
+  return data;
+}
+
+async function assignCdkeysToUser(email, codes) {
+  // TODO: 后端 RPC assign_cdkeys_to_user(email, codes[]) 实现批量分配
+  const { data, error } = await supabase.rpc("assign_cdkeys_to_user", { email, codes });
+  if (error) throw error;
+  return data;
+}
+
+async function deleteSelectedCodes() {
+  if (!selectedCodes.size) return;
+  const codes = Array.from(selectedCodes);
+  const { error } = await supabase.from("cd_keys").delete().in("code", codes);
+  if (error) {
+    console.error("deleteSelectedCodes", error);
+    return;
+  }
+  selectedCodes.clear();
+  await refreshCounts();
+  await loadCdkeys(currentStatus, pageState[currentStatus]);
+}
+
+function toggleAssignModal(show) {
+  if (!assignModal) return;
+  assignModal.classList.toggle("active", !!show);
+  assignModal.setAttribute("aria-hidden", show ? "false" : "true");
+  if (show) assignEmailInput?.focus();
+}
+
 // 退出登录
 logoutBtn.addEventListener("click", async () => {
   await supabase.auth.signOut();
@@ -552,6 +997,8 @@ logoutBtn.addEventListener("click", async () => {
 const user = await ensureAdmin();
 if (user) {
   updateSegmentCopy(currentStatus);
+  await loadAdminAnalytics();
   await refreshCounts();
   await loadCdkeys(currentStatus, pageState[currentStatus]);
+  await loadUsers(userPage);
 }
