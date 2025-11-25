@@ -98,22 +98,63 @@
 
         <div class="auth-forms">
           <form id="login-form" class="form auth-form active">
-            <label data-i18n="labelEmail">Email
-              <input type="email" id="login-email" placeholder="you@example.com" required data-i18n-placeholder="placeholderEmail" />
-            </label>
-            <label data-i18n="labelPassword">Password
-              <input type="password" id="login-password" placeholder="••••••••" required data-i18n-placeholder="placeholderPassword" />
-            </label>
+            <div class="form-field">
+              <label for="login-email" data-i18n="labelEmail">邮箱</label>
+              <input
+                class="auth-input"
+                type="email"
+                id="login-email"
+                name="email"
+                autocomplete="email"
+                placeholder="you@example.com"
+                required
+                data-i18n-placeholder="placeholderEmail"
+              />
+            </div>
+            <div class="form-field">
+              <label for="login-password" data-i18n="labelPassword">密码</label>
+              <input
+                class="auth-input"
+                type="password"
+                id="login-password"
+                name="password"
+                autocomplete="current-password"
+                placeholder="••••••••"
+                required
+                data-i18n-placeholder="placeholderPassword"
+              />
+            </div>
             <button type="submit" class="primary-btn" data-i18n="btnLogin">登录</button>
           </form>
 
           <form id="signup-form" class="form auth-form">
-            <label data-i18n="labelEmail">Email
-              <input type="email" id="signup-email" placeholder="you@example.com" required data-i18n-placeholder="placeholderEmail" />
-            </label>
-            <label data-i18n="labelPassword">Password
-              <input type="password" id="signup-password" minlength="6" placeholder="至少 6 位密码" required data-i18n-placeholder="placeholderPasswordLong" />
-            </label>
+            <div class="form-field">
+              <label for="signup-email" data-i18n="labelEmail">邮箱</label>
+              <input
+                class="auth-input"
+                type="email"
+                id="signup-email"
+                name="email"
+                autocomplete="email"
+                placeholder="you@example.com"
+                required
+                data-i18n-placeholder="placeholderEmail"
+              />
+            </div>
+            <div class="form-field">
+              <label for="signup-password" data-i18n="labelPassword">密码</label>
+              <input
+                class="auth-input"
+                type="password"
+                id="signup-password"
+                name="password"
+                minlength="6"
+                autocomplete="new-password"
+                placeholder="至少 6 位密码"
+                required
+                data-i18n-placeholder="placeholderPasswordLong"
+              />
+            </div>
             <button type="submit" class="secondary-btn" data-i18n="btnSignup">注册新账号</button>
             <p class="hint" data-i18n="signupHint">账号可同时登录网页和 GSearch App，订阅自动同步。</p>
           </form>
