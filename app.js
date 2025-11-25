@@ -71,6 +71,7 @@ const translations = {
     historyUsed: "兑换时间：{time} · CDKey：{code}",
     historyPlan: "{plan} · {days} 天",
     pageTitle: "GSearch Token Center",
+    loadingText: "正在载入…",
   },
   "zh-Hant": {
     brand: "GSearch Token Center",
@@ -133,6 +134,7 @@ const translations = {
     historyUsed: "兌換時間：{time} · CDKey：{code}",
     historyPlan: "{plan} · {days} 天",
     pageTitle: "GSearch Token Center",
+    loadingText: "正在載入…",
   },
   en: {
     brand: "GSearch Token Center",
@@ -196,6 +198,7 @@ const translations = {
     historyUsed: "Redeemed: {time} · CDKey: {code}",
     historyPlan: "{plan} · {days} days",
     pageTitle: "GSearch Token Center",
+    loadingText: "Loading…",
   },
 };
 
@@ -228,6 +231,10 @@ function cycleLanguage() {
 function setLanguage(lang, persist = false) {
   currentLang = supportedLangs.includes(lang) ? lang : "en";
   document.documentElement.lang = currentLang === "zh-Hant" ? "zh-Hant" : currentLang === "zh-Hans" ? "zh-CN" : "en";
+  if (mainContainer && !prefersReducedMotion) {
+    mainContainer.classList.add("lang-switching");
+    setTimeout(() => mainContainer.classList.remove("lang-switching"), 180);
+  }
   if (persist) localStorage.setItem(LANGUAGE_KEY, currentLang);
   document.title = t("pageTitle");
   applyStaticTranslations();
@@ -269,6 +276,10 @@ const signupFormEl = document.getElementById("signup-form");
 const themeToggleBtn = document.getElementById("theme-toggle");
 const themeIcon = themeToggleBtn?.querySelector(".theme-icon");
 const langToggleBtn = document.getElementById("lang-toggle");
+const appLoader = document.getElementById("app-loader");
+const mainContainer = document.querySelector(".main-container");
+const authFormsContainer = document.querySelector(".auth-forms");
+const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 const THEME_KEY = "gsearch-theme";
 
@@ -332,6 +343,31 @@ function setGlobalStatus(msg) {
   globalStatus.textContent = msg || "";
 }
 
+function syncAuthFormHeight() {
+  if (!authFormsContainer) return;
+  const activeForm = activeAuthTab === "signup" ? signupFormEl : loginFormEl;
+  if (activeForm) {
+    authFormsContainer.style.height = `${activeForm.scrollHeight}px`;
+  }
+}
+
+function clearInitializingState() {
+  document.body.classList.remove("app-initializing");
+  toggleLoader(false);
+}
+
+function playSectionFade(el) {
+  if (!el || prefersReducedMotion) return;
+  el.classList.remove("section-fade");
+  void el.offsetWidth;
+  el.classList.add("section-fade");
+}
+
+function toggleLoader(show) {
+  if (!appLoader) return;
+  appLoader.classList.toggle("active", !!show);
+}
+
 // 切换登录/注册标签
 let activeAuthTab = null;
 function setAuthTab(target = "login") {
@@ -345,21 +381,34 @@ function setAuthTab(target = "login") {
   });
 
   const showSignup = target === "signup";
-  signupFormEl?.classList.toggle("active", showSignup);
-  signupFormEl?.setAttribute("aria-hidden", showSignup ? "false" : "true");
+  const nextForm = showSignup ? signupFormEl : loginFormEl;
+  const prevForm = document.querySelector(".auth-form.active");
 
-  const showLogin = !showSignup;
-  loginFormEl?.classList.toggle("active", showLogin);
-  loginFormEl?.setAttribute("aria-hidden", showLogin ? "false" : "true");
+  if (authFormsContainer && nextForm) {
+    authFormsContainer.style.height = `${nextForm.scrollHeight}px`;
+  }
+
+  if (prevForm && !prefersReducedMotion) {
+    prevForm.classList.add("animating-out");
+    setTimeout(() => prevForm.classList.remove("active", "animating-out"), 200);
+  } else {
+    prevForm?.classList.remove("active", "animating-out");
+  }
+
+  if (showSignup) {
+    signupFormEl?.classList.add("active");
+    signupFormEl?.setAttribute("aria-hidden", "false");
+    loginFormEl?.setAttribute("aria-hidden", "true");
+  } else {
+    loginFormEl?.classList.add("active");
+    loginFormEl?.setAttribute("aria-hidden", "false");
+    signupFormEl?.setAttribute("aria-hidden", "true");
+  }
 }
 
 authTabs.forEach((btn) => {
   btn.addEventListener("click", () => setAuthTab(btn.dataset.target));
 });
-
-setLanguage(detectLanguage());
-setAuthTab("login");
-initThemeToggle();
 
 // 登录表单
 document.getElementById("login-form")?.addEventListener("submit", async (e) => {
@@ -474,6 +523,8 @@ function renderLoggedOut() {
   subscriptionExpire.textContent = t("subscriptionExpire", { time: "—" });
   subscriptionStatus.textContent = t("statusInactive");
   subscriptionStatus.className = "status-chip";
+  playSectionFade(authSection);
+  syncAuthFormHeight();
 }
 
 async function renderLoggedIn(user) {
@@ -489,6 +540,7 @@ async function renderLoggedIn(user) {
 
   await loadSubscription();
   await loadRedeemHistory();
+  playSectionFade(dashboardSection);
 }
 
 // 加载订阅信息
@@ -620,19 +672,63 @@ async function loadRedeemHistory() {
   });
 }
 
+function initParallax() {
+  const bg = document.querySelector(".bg-gradient");
+  const stickyBar = document.querySelector(".top-bar");
+  if (!bg && !stickyBar) return;
+  let rafId = null;
+  let cursorX = 0;
+  let cursorY = 0;
+
+  const applyTransform = () => {
+    rafId = null;
+    if (bg) {
+      bg.style.transform = `translate3d(${cursorX * 0.6}px, ${cursorY * 0.6}px, 0)`;
+    }
+  };
+
+  const onMove = (evt) => {
+    const { innerWidth, innerHeight } = window;
+    const xRatio = (evt.clientX - innerWidth / 2) / innerWidth;
+    const yRatio = (evt.clientY - innerHeight / 2) / innerHeight;
+    cursorX = xRatio * 8;
+    cursorY = yRatio * 8;
+    if (!prefersReducedMotion && !rafId) {
+      rafId = requestAnimationFrame(applyTransform);
+    }
+  };
+
+  window.addEventListener("mousemove", onMove);
+  window.addEventListener("scroll", () => {
+    if (!stickyBar || prefersReducedMotion) return;
+    const floating = window.scrollY > 12;
+    stickyBar.classList.toggle("is-floating", floating);
+  });
+}
+
 // 初始化：检查是否已有登陆状态
 async function refreshSessionAndUI() {
   const { data, error } = await supabase.auth.getUser();
   if (error || !data.user) {
     currentUser = null;
     renderLoggedOut();
+    clearInitializingState();
     return;
   }
   currentUser = data.user;
   await renderLoggedIn(data.user);
+  clearInitializingState();
 }
 
-await refreshSessionAndUI();
+window.addEventListener("DOMContentLoaded", async () => {
+  toggleLoader(true);
+  setLanguage(detectLanguage());
+  setAuthTab("login");
+  syncAuthFormHeight();
+  initThemeToggle();
+  initParallax();
+  await refreshSessionAndUI();
+});
 
 // 监听 auth 状态变化
 supabase.auth.onAuthStateChange((_event, _session) => {

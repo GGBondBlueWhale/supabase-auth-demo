@@ -31,7 +31,7 @@
     </div>
   </header>
 
-  <main class="main-container">
+  <main class="main-container smooth-shell">
     <section class="hero-banner flex-between">
       <div>
         <p class="capsule-label" data-i18n="heroTag">管理中心</p>
@@ -41,22 +41,110 @@
       <div class="status-chip" data-i18n="heroBadge">仅管理员可见</div>
     </section>
 
-    <section class="card glass action-card">
-      <div class="flex-between">
+    <section class="card glass analytics-card">
+      <div class="analytics-head flex-between">
         <div>
-          <p class="capsule-label" data-i18n="createTag">批量生成</p>
-          <h2 data-i18n="createTitle">生成 CDKey</h2>
-          <p class="sub-text" data-i18n="createDesc">设定套餐、天数与数量，一键生成并复制保存。</p>
+          <p class="capsule-label" data-i18n="analyticsTag">数据报表</p>
+          <h2 data-i18n="analyticsTitle">用户 &amp; CDKey 概览</h2>
+          <p class="sub-text" data-i18n="analyticsDesc">快速查看注册、订阅与兑换趋势。</p>
         </div>
       </div>
-      <form id="create-cdkey-form" class="form-inline">
-        <input id="plan-input" type="text" placeholder="套餐名，如 pro" value="pro" data-i18n-placeholder="planPlaceholder" />
-        <input id="days-input" type="number" placeholder="天数，如 30" value="30" data-i18n-placeholder="daysPlaceholder" />
-        <input id="count-input" type="number" placeholder="数量，如 5" value="1" data-i18n-placeholder="countPlaceholder" />
-        <button type="submit" class="primary-btn" data-i18n="createSubmit">生成</button>
-      </form>
-      <p class="hint" data-i18n="createHint">生成的兑换码仅管理员可见，用户只能拿到你发给他的码。</p>
-      <pre id="created-codes" class="codes-output"></pre>
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <p class="kpi-label" data-i18n="kpiUsers">总注册用户</p>
+          <h3 id="kpi-users" class="kpi-value">—</h3>
+          <span class="kpi-pill" data-i18n="kpiUsersSub">最近 30 天</span>
+        </div>
+        <div class="kpi-card">
+          <p class="kpi-label" data-i18n="kpiActive">订阅中</p>
+          <h3 id="kpi-active" class="kpi-value">—</h3>
+          <span class="kpi-pill" data-i18n="kpiActiveSub">当前有效订阅</span>
+        </div>
+        <div class="kpi-card">
+          <p class="kpi-label" data-i18n="kpiCdkeyTotal">CDKey 总数</p>
+          <h3 id="kpi-cdkey-total" class="kpi-value">—</h3>
+          <span class="kpi-pill" data-i18n="kpiCdkeyUsed">已使用 / 未使用</span>
+          <p id="kpi-cdkey-split" class="sub-text">—</p>
+        </div>
+      </div>
+      <div class="chart-row">
+        <div class="mini-chart">
+          <div class="chart-head flex-between">
+            <h4 data-i18n="chartUsers">最近 7 天新注册</h4>
+            <span class="tag">7d</span>
+          </div>
+          <canvas id="chart-users" height="120"></canvas>
+        </div>
+        <div class="mini-chart">
+          <div class="chart-head flex-between">
+            <h4 data-i18n="chartRedeem">最近 7 天兑换</h4>
+            <span class="tag">7d</span>
+          </div>
+          <canvas id="chart-redeem" height="120"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <section class="dashboard-grid">
+      <div class="card glass action-card">
+        <div class="flex-between">
+          <div>
+            <p class="capsule-label" data-i18n="createTag">批量生成</p>
+            <h2 data-i18n="createTitle">生成 CDKey</h2>
+            <p class="sub-text" data-i18n="createDesc">设定套餐、天数与数量，一键生成并复制保存。</p>
+          </div>
+        </div>
+        <form id="create-cdkey-form" class="form-inline">
+          <input id="plan-input" type="text" placeholder="套餐名，如 pro" value="pro" data-i18n-placeholder="planPlaceholder" />
+          <input id="days-input" type="number" placeholder="天数，如 30" value="30" data-i18n-placeholder="daysPlaceholder" />
+          <input id="count-input" type="number" placeholder="数量，如 5" value="1" data-i18n-placeholder="countPlaceholder" />
+          <button type="submit" class="primary-btn" data-i18n="createSubmit">生成</button>
+        </form>
+        <p class="hint" data-i18n="createHint">生成的兑换码仅管理员可见，用户只能拿到你发给他的码。</p>
+        <pre id="created-codes" class="codes-output"></pre>
+      </div>
+
+      <div class="card glass user-panel">
+        <div class="split-head">
+          <div>
+            <p class="capsule-label" data-i18n="userPanelTag">用户详情</p>
+            <h3 data-i18n="userPanelTitle">用户概览与代填兑换</h3>
+            <p class="sub-text" data-i18n="userPanelDesc">快速搜索用户、查看订阅并代为兑换 CDKey。</p>
+          </div>
+        </div>
+        <div class="user-grid">
+          <div class="user-list">
+            <div class="table-toolbar">
+              <input id="user-search" type="text" placeholder="搜索邮箱" class="search-input" />
+              <div class="pagination-controls">
+                <button id="user-prev" class="ghost-btn nav-btn" type="button">上一页</button>
+                <span id="user-page-info" class="page-info">第 1 / 1 页</span>
+                <button id="user-next" class="ghost-btn nav-btn" type="button">下一页</button>
+              </div>
+            </div>
+            <table class="cdkey-table compact" id="user-table">
+              <thead>
+                <tr>
+                  <th>Email</th>
+                  <th>订阅状态</th>
+                  <th>到期</th>
+                  <th>管理员</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="user-detail glass">
+            <h4 data-i18n="userDetailTitle">详情</h4>
+            <div id="user-detail-body" class="detail-body">选择左侧用户查看信息。</div>
+            <form id="admin-redeem-form" class="form-inline slim">
+              <input id="admin-redeem-code" type="text" placeholder="CDKey" />
+              <button type="submit" class="secondary-btn" data-i18n="redeemForUser">代该用户兑换</button>
+            </form>
+            <p id="admin-redeem-status" class="status-text"></p>
+          </div>
+        </div>
+      </div>
     </section>
 
     <section class="card glass cdkey-segment">
@@ -102,6 +190,10 @@
               <span class="pill success" data-i18n-scope="unused">未使用：<strong id="unused-count">0</strong></span>
               <span class="pill muted" data-i18n-scope="used">已使用：<strong id="used-count">0</strong></span>
             </div>
+            <div class="bulk-actions">
+              <button id="bulk-delete" class="ghost-btn" type="button" disabled>删除选中</button>
+              <button id="bulk-assign" class="secondary-btn" type="button" disabled>批量分配</button>
+            </div>
             <div class="pagination-controls">
               <button id="prev-page-btn" class="ghost-btn nav-btn" type="button" data-i18n="prevPage">上一页</button>
               <span id="page-info" class="page-info">第 1 / 1 页（共 0 条）</span>
@@ -112,6 +204,7 @@
           <table id="cdkey-table" class="cdkey-table">
             <thead>
               <tr>
+                <th><input type="checkbox" id="select-all" aria-label="select all" /></th>
                 <th data-i18n="thCode">Code</th>
                 <th data-i18n="thPlan">Plan</th>
                 <th data-i18n="thDays">Days</th>
@@ -125,8 +218,24 @@
         </div>
       </div>
     </section>
+
+    <div class="modal" id="assign-modal" aria-hidden="true">
+      <div class="modal-content glass">
+        <div class="split-head">
+          <h3 data-i18n="assignTitle">分配给用户</h3>
+          <button type="button" class="icon-btn" id="close-assign" aria-label="close">✕</button>
+        </div>
+        <p class="sub-text" data-i18n="assignDesc">输入用户邮箱或选择用户，确认后将选中 CDKey 分配给对方。</p>
+        <form id="assign-form" class="form-inline slim">
+          <input type="email" id="assign-email" placeholder="user@example.com" />
+          <button type="submit" class="primary-btn" data-i18n="assignSubmit">确认分配</button>
+        </form>
+        <p id="assign-status" class="status-text"></p>
+      </div>
+    </div>
   </main>
 
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script type="module" src="admin.js"></script>
 </body>
 </html>
