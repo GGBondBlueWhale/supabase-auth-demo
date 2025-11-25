@@ -23,6 +23,8 @@
   --input-shadow: rgba(90, 200, 250, 0.28);
   --ease-out-apple: cubic-bezier(0.25, 0.8, 0.25, 1);
   --layer-raise: 0 18px 48px rgba(5, 10, 30, 0.4);
+  --chart-axis-color: var(--text-sub);
+  --chart-grid-color: rgba(255, 255, 255, 0.1);
 }
 
 :root[data-theme="light"] {
@@ -46,6 +48,8 @@
   --input-border: rgba(22, 35, 60, 0.12);
   --input-shadow: rgba(0, 122, 255, 0.28);
   --layer-raise: 0 18px 36px rgba(22, 42, 82, 0.16);
+  --chart-axis-color: #4b5675;
+  --chart-grid-color: rgba(10, 24, 60, 0.14);
 }
 
 *,
@@ -472,12 +476,44 @@ input:focus {
 
 .icon-btn .theme-icon {
   font-size: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
 }
 
 .icon-btn .theme-svg {
   width: 22px;
   height: 22px;
   display: block;
+  overflow: visible;
+}
+
+.theme-icon .sun,
+.theme-icon .moon {
+  transition: transform 0.28s ease, opacity 0.28s ease;
+  transform-origin: center;
+}
+
+.theme-icon.is-light .sun {
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
+}
+
+.theme-icon.is-light .moon {
+  opacity: 0;
+  transform: scale(0.65) rotate(-16deg);
+}
+
+.theme-icon.is-dark .sun {
+  opacity: 0;
+  transform: scale(0.6) rotate(22deg);
+}
+
+.theme-icon.is-dark .moon {
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
 }
 
 .lang-icon {

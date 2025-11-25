@@ -344,9 +344,18 @@ function buildDailySeries(rows, key) {
   return { labels, values };
 }
 
+function getChartColors() {
+  const styles = getComputedStyle(document.documentElement);
+  return {
+    axis: styles.getPropertyValue("--chart-axis-color").trim() || "var(--text-sub)",
+    grid: styles.getPropertyValue("--chart-grid-color").trim() || "rgba(255,255,255,0.1)",
+  };
+}
+
 function renderLineChart(ctx, dataset) {
   if (!ctx || typeof Chart === "undefined") return null;
   const source = dataset || { labels: [], values: [], color: "#5ac8fa" };
+  const chartColors = getChartColors();
 
   return new Chart(ctx, {
     type: "line",
@@ -366,8 +375,8 @@ function renderLineChart(ctx, dataset) {
     options: {
       plugins: { legend: { display: false } },
       scales: {
-        x: { ticks: { color: "var(--text-sub)", maxRotation: 0 }, grid: { display: false } },
-        y: { ticks: { color: "var(--text-sub)", stepSize: 1 }, grid: { color: "rgba(255,255,255,0.08)" } },
+        x: { ticks: { color: chartColors.axis, maxRotation: 0 }, grid: { display: false, color: chartColors.grid } },
+        y: { ticks: { color: chartColors.axis, stepSize: 1 }, grid: { color: chartColors.grid } },
       },
       animation: {
         duration: 420,
@@ -377,6 +386,16 @@ function renderLineChart(ctx, dataset) {
       maintainAspectRatio: false,
     },
   });
+}
+
+function applyChartTheme() {
+  if (!analyticsChart) return;
+  const colors = getChartColors();
+  const { scales } = analyticsChart.options;
+  if (scales?.x?.ticks) scales.x.ticks.color = colors.axis;
+  if (scales?.y?.ticks) scales.y.ticks.color = colors.axis;
+  if (scales?.x?.grid) scales.x.grid.color = colors.grid;
+  if (scales?.y?.grid) scales.y.grid.color = colors.grid;
 }
 
 const adminEmailSpan = document.getElementById("admin-email");
@@ -450,8 +469,9 @@ let analyticsState = {
     redeem: { labels: [], values: [], color: "#7d89ff" },
   },
 };
-let adminUsers = [];
+let assignableUsers = [];
 let assignTargetUserId = null;
+let lastFocusedDeleteTrigger = null;
 
 /**
  * 更新切换按钮的选中态，保持 Apple 风格的胶囊高亮。
@@ -487,6 +507,7 @@ function updateAnalyticsChart(type) {
   analyticsChart.data.datasets[0].data = dataset.values;
   analyticsChart.data.datasets[0].borderColor = dataset.color;
   animateChartStage();
+  applyChartTheme();
   analyticsChart.update();
 }
 
@@ -522,29 +543,37 @@ function getStatusCopy(status) {
 
 function renderThemeIcon(theme) {
   if (!themeIcon) return;
-  const isLight = theme === "light";
-  themeIcon.innerHTML = isLight
-    ? `<svg viewBox="0 0 24 24" aria-hidden="true" class="theme-svg">
-        <circle cx="12" cy="12" r="5.4" fill="url(#admin-grad)" />
-        <g stroke="rgba(255,255,255,0.85)" stroke-width="1.4" stroke-linecap="round">
-          <line x1="12" y1="2.6" x2="12" y2="5" />
-          <line x1="12" y1="19" x2="12" y2="21.4" />
-          <line x1="4.1" y1="12" x2="2.6" y2="12" />
-          <line x1="21.4" y1="12" x2="20" y2="12" />
-          <line x1="5.5" y1="5.5" x2="3.9" y2="3.9" />
-          <line x1="18.5" y1="18.5" x2="20.1" y2="20.1" />
-          <line x1="5.5" y1="18.5" x2="3.9" y2="20.1" />
-          <line x1="18.5" y1="5.5" x2="20.1" y2="3.9" />
+  if (!themeIcon.dataset.rendered) {
+    themeIcon.innerHTML = `
+      <svg viewBox="0 0 24 24" aria-hidden="true" class="theme-svg">
+        <g class="sun">
+          <circle cx="12" cy="12" r="5.4" fill="url(#admin-grad)" />
+          <g stroke="rgba(255,255,255,0.85)" stroke-width="1.4" stroke-linecap="round">
+            <line x1="12" y1="2.6" x2="12" y2="5" />
+            <line x1="12" y1="19" x2="12" y2="21.4" />
+            <line x1="4.1" y1="12" x2="2.6" y2="12" />
+            <line x1="21.4" y1="12" x2="20" y2="12" />
+            <line x1="5.5" y1="5.5" x2="3.9" y2="3.9" />
+            <line x1="18.5" y1="18.5" x2="20.1" y2="20.1" />
+            <line x1="5.5" y1="18.5" x2="3.9" y2="20.1" />
+            <line x1="18.5" y1="5.5" x2="20.1" y2="3.9" />
+          </g>
         </g>
-      </svg>`
-    : `<svg viewBox="0 0 24 24" aria-hidden="true" class="theme-svg">
-        <path d="M18.5 14.2A7 7 0 0 1 9.8 5.5a7.5 7.5 0 1 0 8.7 8.7Z" fill="url(#admin-grad)" stroke="rgba(255,255,255,0.6)" stroke-width="1.2" />
+        <g class="moon">
+          <path d="M18.5 14.2A7 7 0 0 1 9.8 5.5a7.5 7.5 0 1 0 8.7 8.7Z" fill="url(#admin-grad)" stroke="rgba(255,255,255,0.6)" stroke-width="1.2" />
+        </g>
       </svg>`;
+    themeIcon.dataset.rendered = "true";
+  }
+  themeIcon.classList.toggle("is-light", theme === "light");
+  themeIcon.classList.toggle("is-dark", theme === "dark");
 }
 
 function applyTheme(theme) {
   document.documentElement.setAttribute("data-theme", theme);
   renderThemeIcon(theme);
+  applyChartTheme();
+  analyticsChart?.update();
 }
 
 function initThemeToggle() {
@@ -887,7 +916,7 @@ async function loadUsers(page = 1) {
   }
 
   if (userTableBody) userTableBody.innerHTML = "";
-  adminUsers = data.map((user) => {
+  assignableUsers = data.map((user) => {
     const sub = subMap.get(user.id);
     const subMeta = formatSubscription(sub);
     const enriched = { ...user, subscription: subMeta };
@@ -901,6 +930,26 @@ async function loadUsers(page = 1) {
     tr.addEventListener("click", () => selectUser(enriched));
     userTableBody?.appendChild(tr);
     return enriched;
+  });
+
+  renderAssignUserList(assignEmailInput?.value?.trim() || "");
+}
+
+async function loadAssignableUsers() {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, email, is_admin, created_at, subscriptions(plan, expire_at)")
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  if (error) {
+    console.error("loadAssignableUsers", error);
+    return;
+  }
+
+  assignableUsers = (data || []).map((user) => {
+    const sub = user.subscriptions?.[0];
+    return { ...user, subscription: formatSubscription(sub) };
   });
 
   renderAssignUserList(assignEmailInput?.value?.trim() || "");
@@ -954,7 +1003,7 @@ function renderAssignUserList(filter = "") {
   const keyword = filter.toLowerCase();
   assignUserList.innerHTML = "";
 
-  const list = (adminUsers || [])
+  const list = (assignableUsers || [])
     .filter((u) => !keyword || u.email?.toLowerCase().includes(keyword))
     .slice(0, 10);
 
@@ -994,6 +1043,7 @@ function switchStatus(status) {
 
   updateSegmentCopy(status);
   updatePageControls();
+  updateBulkActionVisibility();
   loadCdkeys(status, pageState[status]);
 }
 
@@ -1004,6 +1054,12 @@ function updateBulkButtons() {
   if (selectAllCheckbox) selectAllCheckbox.checked = hasSelection && selectedCodes.size >= (cdkeyTableBody?.querySelectorAll(".row-select")?.length || 0);
   updateAssignSelectedCopy();
   updateDeleteConfirmCopy();
+}
+
+function updateBulkActionVisibility() {
+  if (bulkAssignBtn) {
+    bulkAssignBtn.style.display = currentStatus === "unused" ? "" : "none";
+  }
 }
 
 segmentTabs.forEach((tab) => {
@@ -1063,8 +1119,13 @@ adminRedeemForm?.addEventListener("submit", async (e) => {
     adminRedeemInput.value = "";
     await loadUserDetail(selectedUser);
     await refreshCounts();
-    await loadCdkeys(currentStatus, pageState[currentStatus]);
+    await Promise.all([
+      loadCdkeys("unused", pageState.unused),
+      loadCdkeys("used", pageState.used),
+      loadAdminAnalytics(),
+    ]);
   } catch (err) {
+    console.error("redeemCdkeyForUser failed", err);
     adminRedeemStatus.textContent = err.message || "兑换失败";
   }
 });
@@ -1117,12 +1178,18 @@ assignForm?.addEventListener("submit", async (e) => {
     assignTargetUserId = null;
     if (assignEmailInput) assignEmailInput.value = "";
     selectedCodes.clear();
+    updateBulkButtons();
     await refreshCounts();
-    await loadCdkeys(currentStatus, pageState[currentStatus]);
+    await Promise.all([
+      loadCdkeys("unused", pageState.unused),
+      loadCdkeys("used", pageState.used),
+      loadAdminAnalytics(),
+    ]);
     if (selectedUser && (selectedUser.id === targetId || selectedUser.email === email)) {
       await loadUserDetail(selectedUser);
     }
   } catch (err) {
+    console.error("assign_cdkeys_to_user failed", err);
     if (assignStatus) assignStatus.textContent = err.message || "分配失败";
   }
 });
@@ -1156,16 +1223,18 @@ async function redeemCdkeyForUser(userId, code) {
     if (error) throw error;
     return data;
   } catch (err) {
+    console.error("admin_redeem_code_for_user rpc error", { error: err, code });
     throw new Error(err.message || "兑换失败");
   }
 }
 
 async function assignCdkeysToUser(email, codes) {
   try {
-    const { data, error } = await supabase.rpc("assign_cdkeys_to_user", { codes, user_email: email });
+    const { data, error } = await supabase.rpc("assign_cdkeys_to_user", { codes, email });
     if (error) throw error;
     return data;
   } catch (err) {
+    console.error("assign_cdkeys_to_user rpc error", { error: err, email, count: codes?.length || 0 });
     throw new Error(err.message || "分配失败");
   }
 }
@@ -1187,8 +1256,21 @@ async function deleteSelectedCodes(codes = Array.from(selectedCodes)) {
 
 function toggleDeleteConfirm(show) {
   if (!deleteConfirmModal) return;
-  deleteConfirmModal.classList.toggle("active", !!show);
-  deleteConfirmModal.setAttribute("aria-hidden", show ? "false" : "true");
+  if (show) {
+    lastFocusedDeleteTrigger = document.activeElement;
+    deleteConfirmModal.classList.add("active");
+    deleteConfirmModal.setAttribute("aria-hidden", "false");
+    deleteConfirmModal.setAttribute("role", "dialog");
+    deleteConfirmModal.setAttribute("aria-modal", "true");
+    confirmDeleteBtn?.focus();
+  } else {
+    bulkDeleteBtn?.focus();
+    if (!bulkDeleteBtn && lastFocusedDeleteTrigger instanceof HTMLElement) {
+      lastFocusedDeleteTrigger.focus();
+    }
+    deleteConfirmModal.classList.remove("active");
+    deleteConfirmModal.setAttribute("aria-hidden", "true");
+  }
 }
 
 function openDeleteConfirm() {
@@ -1197,7 +1279,7 @@ function openDeleteConfirm() {
   toggleDeleteConfirm(true);
 }
 
-function toggleAssignModal(show) {
+async function toggleAssignModal(show) {
   if (!assignModal) return;
   assignModal.classList.toggle("active", !!show);
   assignModal.setAttribute("aria-hidden", show ? "false" : "true");
@@ -1205,6 +1287,7 @@ function toggleAssignModal(show) {
     if (assignStatus) assignStatus.textContent = "";
     assignTargetUserId = null;
     updateAssignSelectedCopy();
+    await loadAssignableUsers();
     renderAssignUserList(assignEmailInput?.value?.trim() || "");
     assignEmailInput?.focus();
   }
@@ -1220,8 +1303,10 @@ logoutBtn.addEventListener("click", async () => {
 const user = await ensureAdmin();
 if (user) {
   updateSegmentCopy(currentStatus);
+  updateBulkActionVisibility();
   await loadAdminAnalytics();
   await refreshCounts();
   await loadCdkeys(currentStatus, pageState[currentStatus]);
   await loadUsers(userPage);
+  await loadAssignableUsers();
 }
