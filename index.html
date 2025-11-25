@@ -8,12 +8,34 @@
 </head>
 <body class="app-body">
   <div class="bg-gradient"></div>
+  <svg aria-hidden="true" focusable="false" class="defs" width="0" height="0" style="position:absolute">
+    <defs>
+      <linearGradient id="grad-lock" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#5ac8fa" />
+        <stop offset="100%" stop-color="#7d89ff" />
+      </linearGradient>
+      <linearGradient id="grad-bolt" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#7d89ff" />
+        <stop offset="100%" stop-color="#5ac8fa" />
+      </linearGradient>
+      <linearGradient id="grad-device" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#5ac8fa" />
+        <stop offset="100%" stop-color="#9ef3ff" />
+      </linearGradient>
+    </defs>
+  </svg>
 
   <header class="top-bar glass">
-    <div class="logo">GSearch Token Center</div>
+    <div class="logo" data-i18n="brand">GSearch Token Center</div>
     <div class="top-bar-right">
+      <button id="lang-toggle" class="icon-btn" aria-label="Language" title="Language">
+        <span class="lang-icon">中</span>
+      </button>
+      <button id="theme-toggle" class="icon-btn" aria-label="切换深浅色">
+        <span class="theme-icon" aria-hidden="true"></span>
+      </button>
       <span id="current-user-email" class="user-email"></span>
-      <button id="logout-btn" class="ghost-btn" style="display:none;">退出登录</button>
+      <button id="logout-btn" class="ghost-btn" style="display:none;" data-i18n="logout">退出登录</button>
     </div>
   </header>
 
@@ -22,48 +44,73 @@
     <!-- 登录/注册区域 -->
     <section id="auth-section" class="auth-layout">
       <div class="auth-hero">
-        <p class="capsule-label">安全 · 即时 · 多端同步</p>
-        <h1>管理你的 GSearch 订阅</h1>
-        <p>在一个地方完成登录、续费与账户管理，网页与 App 自动同步，随时掌握订阅状态。</p>
+        <p class="capsule-label" data-i18n="heroTag">安全 · 即时 · 多端同步</p>
+        <h1 data-i18n="heroTitle">管理你的 GSearch 订阅</h1>
+        <p data-i18n="heroDesc">在一个地方完成登录、续费与账户管理，网页与 App 自动同步，随时掌握订阅状态。</p>
         <div class="highlights">
-          <div class="highlight-item">🔒 双重加密传输，确保登录安全</div>
-          <div class="highlight-item">⚡ 快速兑换 CDKey，订阅实时生效</div>
-          <div class="highlight-item">📱 与 GSearch App 共用账号，免重复操作</div>
+          <div class="highlight-item">
+            <span class="icon-box" aria-hidden="true">
+              <svg class="icon" viewBox="0 0 24 24" role="presentation">
+                <rect x="5" y="9" width="14" height="10" rx="3" ry="3" fill="url(#grad-lock)" stroke="rgba(255,255,255,0.4)" stroke-width="1" />
+                <path d="M9 9V7a3 3 0 0 1 6 0v2" stroke="rgba(255,255,255,0.7)" stroke-width="1.6" stroke-linecap="round" fill="none" />
+              </svg>
+            </span>
+            <span data-i18n="heroHighlight1">双重加密传输，确保登录安全</span>
+          </div>
+          <div class="highlight-item">
+            <span class="icon-box" aria-hidden="true">
+              <svg class="icon" viewBox="0 0 24 24" role="presentation">
+                <circle cx="12" cy="12" r="9" fill="url(#grad-bolt)" />
+                <path d="M12 5.5 9.4 12h3.2L12 18.5l3.6-7.5h-3.2Z" fill="#0b1222" opacity="0.9" />
+              </svg>
+            </span>
+            <span data-i18n="heroHighlight2">快速兑换 CDKey，订阅实时生效</span>
+          </div>
+          <div class="highlight-item">
+            <span class="icon-box" aria-hidden="true">
+              <svg class="icon" viewBox="0 0 24 24" role="presentation">
+                <rect x="5" y="4.5" width="14" height="15" rx="3" fill="url(#grad-device)" />
+                <rect x="9" y="8" width="6" height="1.6" rx="0.8" fill="#0b1222" opacity="0.8" />
+                <rect x="10" y="12" width="4" height="1.6" rx="0.8" fill="#0b1222" opacity="0.8" />
+              </svg>
+            </span>
+            <span data-i18n="heroHighlight3">与 GSearch App 共用账号，免重复操作</span>
+          </div>
         </div>
       </div>
 
       <div class="auth-card glass">
         <div class="auth-header">
-          <p class="eyebrow">ACCOUNT</p>
-          <h2>欢迎回来</h2>
-          <p class="muted">登录或注册后即可管理订阅与兑换码。</p>
+          <p class="eyebrow" data-i18n="accountTag">ACCOUNT</p>
+          <h2 data-i18n="welcomeBack">欢迎回来</h2>
+          <p class="muted" data-i18n="authLead">登录或注册后即可管理订阅与兑换码。</p>
         </div>
 
         <div class="auth-tabs">
-          <button id="tab-login" class="tab auth-tab active" data-target="login">登录</button>
-          <button id="tab-signup" class="tab auth-tab" data-target="signup">注册</button>
+          <button id="tab-login" class="tab auth-tab active" data-target="login" data-i18n="tabLogin">登录</button>
+          <button id="tab-signup" class="tab auth-tab" data-target="signup" data-i18n="tabSignup">注册</button>
         </div>
 
         <div class="auth-forms">
           <form id="login-form" class="form auth-form active">
-            <label>Email
-              <input type="email" id="login-email" placeholder="you@example.com" required />
+            <label data-i18n="labelEmail">Email
+              <input type="email" id="login-email" placeholder="you@example.com" required data-i18n-placeholder="placeholderEmail" />
             </label>
-            <label>Password
-              <input type="password" id="login-password" placeholder="••••••••" required />
+            <label data-i18n="labelPassword">Password
+              <input type="password" id="login-password" placeholder="••••••••" required data-i18n-placeholder="placeholderPassword" />
             </label>
-            <button type="submit" class="primary-btn">登录</button>
+            <button type="submit" class="primary-btn" data-i18n="btnLogin">登录</button>
           </form>
 
           <form id="signup-form" class="form auth-form">
-            <label>Email
-              <input type="email" id="signup-email" placeholder="you@example.com" required />
+            <label data-i18n="labelEmail">Email
+              <input type="email" id="signup-email" placeholder="you@example.com" required data-i18n-placeholder="placeholderEmail" />
             </label>
-            <label>Password
-              <input type="password" id="signup-password" minlength="6" placeholder="至少 6 位密码" required />
+            <label data-i18n="labelPassword">Password
+              <input type="password" id="signup-password" minlength="6" placeholder="至少 6 位密码" required data-i18n-placeholder="placeholderPasswordLong" />
             </label>
-            <button type="submit" class="secondary-btn">注册新账号</button>
-            <p class="hint">账号可同时登录网页和 GSearch App，订阅自动同步。</p>
+            <button type="submit" class="secondary-btn" data-i18n="btnSignup">注册新账号</button>
+            <p class="hint" data-i18n="signupHint">账号可同时登录网页和 GSearch App，订阅自动同步。</p>
           </form>
         </div>
       </div>
@@ -73,26 +120,26 @@
     <section id="dashboard-section" class="dashboard" style="display:none;">
       <div class="hero-banner flex-between">
         <div>
-          <p class="capsule-label">订阅中心</p>
-          <h1>欢迎回来</h1>
-          <p>查看订阅状态、账号信息并快速兑换续费。</p>
+          <p class="capsule-label" data-i18n="dashTag">订阅中心</p>
+          <h1 data-i18n="dashWelcome">欢迎回来</h1>
+          <p data-i18n="dashLead">查看订阅状态、账号信息并快速兑换续费。</p>
         </div>
-        <div class="status-chip" id="subscription-status">未订阅</div>
+        <div class="status-chip" id="subscription-status" data-i18n="statusInactive">未订阅</div>
       </div>
 
       <div class="card-row">
         <div class="card glass">
-          <h2>订阅状态</h2>
+          <h2 data-i18n="cardSubscription">订阅状态</h2>
           <p id="subscription-plan" class="metric-value">—</p>
           <p id="subscription-expire" class="sub-text">到期时间：—</p>
-          <p class="sub-text">订阅实时同步到 GSearch App。</p>
+          <p class="sub-text" data-i18n="cardSubscriptionHint">订阅实时同步到 GSearch App。</p>
         </div>
         <div class="card glass">
-          <h2>账号信息</h2>
+          <h2 data-i18n="cardProfile">账号信息</h2>
           <ul class="info-list">
             <li><span class="bullet-dot"></span><strong>Email：</strong><span id="profile-email"></span></li>
             <li><span class="bullet-dot"></span><strong>User ID：</strong><span id="profile-id"></span></li>
-            <li><span class="bullet-dot"></span><span class="sub-text">使用同一账号登录 App 与网页。</span></li>
+            <li><span class="bullet-dot"></span><span class="sub-text" data-i18n="cardProfileHint">使用同一账号登录 App 与网页。</span></li>
           </ul>
         </div>
       </div>
@@ -100,30 +147,30 @@
       <div class="card glass action-card">
         <div class="flex-between">
           <div>
-            <p class="capsule-label">快速兑换</p>
-            <h2>CDKey 兑换续费</h2>
-            <p class="sub-text">输入兑换码后立即延长订阅时长。</p>
+            <p class="capsule-label" data-i18n="redeemTag">快速兑换</p>
+            <h2 data-i18n="redeemTitle">CDKey 兑换续费</h2>
+            <p class="sub-text" data-i18n="redeemLead">输入兑换码后立即延长订阅时长。</p>
           </div>
         </div>
         <form id="redeem-form" class="form-inline">
-          <input id="redeem-code-input" type="text" placeholder="输入兑换码，如 GSRCH-XXXX-XXXX" />
-          <button type="submit" class="primary-btn">兑换</button>
+          <input id="redeem-code-input" type="text" placeholder="输入兑换码，如 GSRCH-XXXX-XXXX" data-i18n-placeholder="redeemPlaceholder" />
+          <button type="submit" class="primary-btn" data-i18n="redeemSubmit">兑换</button>
         </form>
         <p id="redeem-status" class="status-text"></p>
       </div>
 
       <div class="card glass">
-        <h2>兑换记录</h2>
-        <p id="redeem-history-empty" class="muted-text">暂无兑换记录。</p>
+        <h2 data-i18n="historyTitle">兑换记录</h2>
+        <p id="redeem-history-empty" class="muted-text" data-i18n="historyEmpty">暂无兑换记录。</p>
         <ul id="redeem-history-list" class="history-list"></ul>
       </div>
 
       <div class="card glass">
-        <h2>使用说明</h2>
+        <h2 data-i18n="guideTitle">使用说明</h2>
         <ul class="bullets">
-          <li>每个 CDKey 只能使用一次，兑换后自动叠加到当前订阅。</li>
-          <li>网页与 App 共用同一后端，续费后多端同步生效。</li>
-          <li>如遇问题可以在 GSearch App 内反馈，或邮件联系开发者。</li>
+          <li data-i18n="guide1">每个 CDKey 只能使用一次，兑换后自动叠加到当前订阅。</li>
+          <li data-i18n="guide2">网页与 App 共用同一后端，续费后多端同步生效。</li>
+          <li data-i18n="guide3">如遇问题可以在 GSearch App 内反馈，或邮件联系开发者。</li>
         </ul>
       </div>
     </section>

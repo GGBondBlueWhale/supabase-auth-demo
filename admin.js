@@ -6,13 +6,225 @@ const SUPABASE_ANON_KEY =
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+const LANGUAGE_KEY = "gsearch-lang";
+const supportedLangs = ["zh-Hans", "zh-Hant", "en"];
+
+const translations = {
+  "zh-Hans": {
+    brandAdmin: "GSearch Admin",
+    logout: "退出",
+    heroTag: "管理中心",
+    heroTitle: "生成与追踪 CDKey",
+    heroDesc: "面向管理员的兑换码管理面板，快速生成、查看最近使用情况。",
+    heroBadge: "仅管理员可见",
+    createTag: "批量生成",
+    createTitle: "生成 CDKey",
+    createDesc: "设定套餐、天数与数量，一键生成并复制保存。",
+    planPlaceholder: "套餐名，如 pro",
+    daysPlaceholder: "天数，如 30",
+    countPlaceholder: "数量，如 5",
+    createSubmit: "生成",
+    createHint: "生成的兑换码仅管理员可见，用户只能拿到你发给他的码。",
+    listTag: "记录",
+    listTitle: "最近生成 / 使用的 CDKey",
+    listDesc: "自动按照「未使用」与「已使用」分区，切换查看更清晰。",
+    tabUnused: "未使用",
+    tabUnusedDesc: "等待发放",
+    tabUsed: "已使用",
+    tabUsedDesc: "兑换记录",
+    segmentBadgeUnused: "未使用",
+    segmentBadgeUsed: "已使用",
+    segmentTitleUnused: "等待分发的兑换码",
+    segmentTitleUsed: "已经被兑换的记录",
+    segmentDescUnused: "支持分页查看，默认每页 50 条，可随时切换已使用/未使用列表。",
+    segmentDescUsed: "集中查看已使用的兑换码、使用邮箱及时间，方便追踪。",
+    segmentTagUnused: "最新",
+    segmentTagUsed: "追踪",
+    pillUnused: "未使用：{count}",
+    pillUsed: "已使用：{count}",
+    prevPage: "上一页",
+    nextPage: "下一页",
+    pageInfo: "第 {page} / {total} 页（共 {count} 条）",
+    thCode: "Code",
+    thPlan: "Plan",
+    thDays: "Days",
+    thStatus: "Status",
+    thUsedBy: "Used By",
+    thUsedAt: "Used At",
+    emptyUnused: "暂无未使用的兑换码",
+    emptyUsed: "暂无已使用的兑换码",
+    createFailed: "生成失败：{error}",
+    ensureAdminFail: "非管理员，已返回首页。",
+  },
+  "zh-Hant": {
+    brandAdmin: "GSearch Admin",
+    logout: "退出",
+    heroTag: "管理中心",
+    heroTitle: "生成與追蹤 CDKey",
+    heroDesc: "面向管理員的兌換碼管理面板，快速生成、查看最近使用情況。",
+    heroBadge: "僅管理員可見",
+    createTag: "批量生成",
+    createTitle: "生成 CDKey",
+    createDesc: "設定套餐、天數與數量，一鍵生成並複製保存。",
+    planPlaceholder: "套餐名，如 pro",
+    daysPlaceholder: "天數，如 30",
+    countPlaceholder: "數量，如 5",
+    createSubmit: "生成",
+    createHint: "生成的兌換碼僅管理員可見，使用者只能拿到你發給他的碼。",
+    listTag: "紀錄",
+    listTitle: "最近生成 / 使用的 CDKey",
+    listDesc: "自動按照「未使用」與「已使用」分區，切換查看更清晰。",
+    tabUnused: "未使用",
+    tabUnusedDesc: "等待發放",
+    tabUsed: "已使用",
+    tabUsedDesc: "兌換紀錄",
+    segmentBadgeUnused: "未使用",
+    segmentBadgeUsed: "已使用",
+    segmentTitleUnused: "等待分發的兌換碼",
+    segmentTitleUsed: "已經被兌換的紀錄",
+    segmentDescUnused: "支援分頁查看，預設每頁 50 條，可隨時切換已使用/未使用列表。",
+    segmentDescUsed: "集中查看已使用的兌換碼、使用郵箱及時間，方便追蹤。",
+    segmentTagUnused: "最新",
+    segmentTagUsed: "追蹤",
+    pillUnused: "未使用：{count}",
+    pillUsed: "已使用：{count}",
+    prevPage: "上一頁",
+    nextPage: "下一頁",
+    pageInfo: "第 {page} / {total} 頁（共 {count} 條）",
+    thCode: "Code",
+    thPlan: "Plan",
+    thDays: "Days",
+    thStatus: "Status",
+    thUsedBy: "Used By",
+    thUsedAt: "Used At",
+    emptyUnused: "暫無未使用的兌換碼",
+    emptyUsed: "暫無已使用的兌換碼",
+    createFailed: "生成失敗：{error}",
+    ensureAdminFail: "非管理員，已返回首頁。",
+  },
+  en: {
+    brandAdmin: "GSearch Admin",
+    logout: "Sign out",
+    heroTag: "Admin",
+    heroTitle: "Create and track CDKeys",
+    heroDesc: "Generate keys in batches, review usage, and audit history in one place.",
+    heroBadge: "Admins only",
+    createTag: "Batch create",
+    createTitle: "Generate CDKeys",
+    createDesc: "Set plan, days, and quantity, then copy the generated keys instantly.",
+    planPlaceholder: "Plan, e.g. pro",
+    daysPlaceholder: "Days, e.g. 30",
+    countPlaceholder: "Quantity, e.g. 5",
+    createSubmit: "Generate",
+    createHint: "Generated CDKeys stay visible to admins only—users only see what you share.",
+    listTag: "Records",
+    listTitle: "Latest generated / redeemed keys",
+    listDesc: "Switch between unused and used partitions with clear pagination.",
+    tabUnused: "Unused",
+    tabUnusedDesc: "Ready to issue",
+    tabUsed: "Used",
+    tabUsedDesc: "Redemption log",
+    segmentBadgeUnused: "Unused",
+    segmentBadgeUsed: "Used",
+    segmentTitleUnused: "CDKeys ready to share",
+    segmentTitleUsed: "Already redeemed entries",
+    segmentDescUnused: "Paginated view (50 per page) with quick status toggles.",
+    segmentDescUsed: "See used codes with user email and timestamps for traceability.",
+    segmentTagUnused: "New",
+    segmentTagUsed: "Audit",
+    pillUnused: "Unused: {count}",
+    pillUsed: "Used: {count}",
+    prevPage: "Prev",
+    nextPage: "Next",
+    pageInfo: "Page {page} / {total} (total {count})",
+    thCode: "Code",
+    thPlan: "Plan",
+    thDays: "Days",
+    thStatus: "Status",
+    thUsedBy: "Used By",
+    thUsedAt: "Used At",
+    emptyUnused: "No unused CDKeys",
+    emptyUsed: "No used CDKeys",
+    createFailed: "Failed to generate: {error}",
+    ensureAdminFail: "Not an admin. Redirected to home.",
+  },
+};
+
+let currentLang = "zh-Hans";
+
+function t(key, vars = {}) {
+  const dict = translations[currentLang] || translations.en;
+  const fallback = translations.en;
+  let template = dict[key] || fallback[key] || key;
+  return template.replace(/\{(.*?)\}/g, (_, token) => vars[token] ?? "");
+}
+
+function detectLanguage() {
+  const stored = localStorage.getItem(LANGUAGE_KEY);
+  if (stored && supportedLangs.includes(stored)) return stored;
+  const lang = navigator.language?.toLowerCase() || "en";
+  if (lang.startsWith("zh-hant") || lang.startsWith("zh-tw") || lang.startsWith("zh-hk")) {
+    return "zh-Hant";
+  }
+  if (lang.startsWith("zh")) return "zh-Hans";
+  return "en";
+}
+
+function cycleLanguage() {
+  const idx = supportedLangs.indexOf(currentLang);
+  const next = supportedLangs[(idx + 1) % supportedLangs.length];
+  setLanguage(next, true);
+}
+
+function setLanguage(lang, persist = false) {
+  currentLang = supportedLangs.includes(lang) ? lang : "en";
+  document.documentElement.lang = currentLang === "zh-Hant" ? "zh-Hant" : currentLang === "zh-Hans" ? "zh-CN" : "en";
+  if (persist) localStorage.setItem(LANGUAGE_KEY, currentLang);
+  applyStaticTranslations();
+}
+
+function applyStaticTranslations() {
+  document.querySelectorAll("[data-i18n]").forEach((node) => {
+    const key = node.getAttribute("data-i18n");
+    node.textContent = t(key);
+  });
+
+  document.querySelectorAll("[data-i18n-placeholder]").forEach((node) => {
+    const key = node.getAttribute("data-i18n-placeholder");
+    node.setAttribute("placeholder", t(key));
+  });
+
+  const langIcon = document.querySelector("#lang-toggle .lang-icon");
+  if (langIcon) {
+    langIcon.textContent = currentLang === "en" ? "EN" : currentLang === "zh-Hant" ? "繁" : "中";
+  }
+
+  const logoutBtn = document.getElementById("admin-logout-btn");
+  if (logoutBtn) logoutBtn.textContent = t("logout");
+
+  updatePills();
+}
+
+function updatePills() {
+  const unusedWrapper = document.querySelector('[data-i18n-scope="unused"]');
+  const usedWrapper = document.querySelector('[data-i18n-scope="used"]');
+  if (unusedWrapper && unusedCountSpan) {
+    unusedWrapper.innerHTML = t("pillUnused", { count: `<strong id="unused-count">${unusedCountSpan.textContent}</strong>` });
+    unusedCountSpan = document.getElementById("unused-count");
+  }
+  if (usedWrapper && usedCountSpan) {
+    usedWrapper.innerHTML = t("pillUsed", { count: `<strong id="used-count">${usedCountSpan.textContent}</strong>` });
+    usedCountSpan = document.getElementById("used-count");
+  }
+}
+
 const adminEmailSpan = document.getElementById("admin-email");
 const logoutBtn = document.getElementById("admin-logout-btn");
 const createForm = document.getElementById("create-cdkey-form");
 const codesOutput = document.getElementById("created-codes");
 const cdkeyTableBody = document.querySelector("#cdkey-table tbody");
-const unusedCountSpan = document.getElementById("unused-count");
-const usedCountSpan = document.getElementById("used-count");
+let unusedCountSpan = document.getElementById("unused-count");
+let usedCountSpan = document.getElementById("used-count");
 const segmentTabs = document.querySelectorAll(".segment-tab");
 const statusBadge = document.getElementById("status-badge");
 const listTitle = document.getElementById("list-title");
@@ -21,6 +233,11 @@ const listTag = document.getElementById("list-tag");
 const pageInfo = document.getElementById("page-info");
 const prevPageBtn = document.getElementById("prev-page-btn");
 const nextPageBtn = document.getElementById("next-page-btn");
+const themeToggleBtn = document.getElementById("theme-toggle");
+const themeIcon = themeToggleBtn?.querySelector(".theme-icon");
+const langToggleBtn = document.getElementById("lang-toggle");
+
+const THEME_KEY = "gsearch-theme";
 
 const PAGE_SIZE = 50;
 let currentStatus = "unused";
@@ -28,22 +245,60 @@ const pageState = { unused: 1, used: 1 };
 const totalPages = { unused: 1, used: 1 };
 const totalCounts = { unused: 0, used: 0 };
 
-const statusCopy = {
-  unused: {
-    label: "未使用",
-    title: "等待分发的兑换码",
-    desc: "支持分页查看，默认每页 50 条，可切换已使用/未使用列表。",
-    tag: "最新",
-    empty: "暂无未使用的兑换码",
-  },
-  used: {
-    label: "已使用",
-    title: "已经被兑换的记录",
-    desc: "集中查看已使用的兑换码、使用邮箱及时间，方便追踪。",
-    tag: "追踪",
-    empty: "暂无已使用的兑换码",
-  },
-};
+function getStatusCopy(status) {
+  return {
+    label: status === "unused" ? t("segmentBadgeUnused") : t("segmentBadgeUsed"),
+    title: status === "unused" ? t("segmentTitleUnused") : t("segmentTitleUsed"),
+    desc: status === "unused" ? t("segmentDescUnused") : t("segmentDescUsed"),
+    tag: status === "unused" ? t("segmentTagUnused") : t("segmentTagUsed"),
+    empty: status === "unused" ? t("emptyUnused") : t("emptyUsed"),
+  };
+}
+
+function renderThemeIcon(theme) {
+  if (!themeIcon) return;
+  const isLight = theme === "light";
+  themeIcon.innerHTML = isLight
+    ? `<svg viewBox="0 0 24 24" aria-hidden="true" class="theme-svg">
+        <circle cx="12" cy="12" r="5.4" fill="url(#admin-grad)" />
+        <g stroke="rgba(255,255,255,0.85)" stroke-width="1.4" stroke-linecap="round">
+          <line x1="12" y1="2.6" x2="12" y2="5" />
+          <line x1="12" y1="19" x2="12" y2="21.4" />
+          <line x1="4.1" y1="12" x2="2.6" y2="12" />
+          <line x1="21.4" y1="12" x2="20" y2="12" />
+          <line x1="5.5" y1="5.5" x2="3.9" y2="3.9" />
+          <line x1="18.5" y1="18.5" x2="20.1" y2="20.1" />
+          <line x1="5.5" y1="18.5" x2="3.9" y2="20.1" />
+          <line x1="18.5" y1="5.5" x2="20.1" y2="3.9" />
+        </g>
+      </svg>`
+    : `<svg viewBox="0 0 24 24" aria-hidden="true" class="theme-svg">
+        <path d="M18.5 14.2A7 7 0 0 1 9.8 5.5a7.5 7.5 0 1 0 8.7 8.7Z" fill="url(#admin-grad)" stroke="rgba(255,255,255,0.6)" stroke-width="1.2" />
+      </svg>`;
+}
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute("data-theme", theme);
+  renderThemeIcon(theme);
+}
+
+function initThemeToggle() {
+  const storedTheme = localStorage.getItem(THEME_KEY);
+  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const initialTheme = storedTheme || (prefersDark ? "dark" : "light");
+  applyTheme(initialTheme);
+
+  themeToggleBtn?.addEventListener("click", () => {
+    const currentTheme = document.documentElement.getAttribute("data-theme") || "dark";
+    const nextTheme = currentTheme === "dark" ? "light" : "dark";
+    applyTheme(nextTheme);
+    localStorage.setItem(THEME_KEY, nextTheme);
+  });
+}
+
+initThemeToggle();
+langToggleBtn?.addEventListener("click", cycleLanguage);
+setLanguage(detectLanguage());
 
 // 生成随机兑换码
 function generateCode() {
@@ -125,7 +380,7 @@ createForm.addEventListener("submit", async (e) => {
 
   if (error) {
     console.error(error);
-    codesOutput.textContent = "生成失败：" + error.message;
+    codesOutput.textContent = t("createFailed", { error: error.message });
     return;
   }
 
@@ -139,7 +394,7 @@ createForm.addEventListener("submit", async (e) => {
 });
 
 function updateSegmentCopy(status) {
-  const copy = statusCopy[status];
+  const copy = getStatusCopy(status);
   statusBadge.textContent = copy.label;
   statusBadge.classList.toggle("success", status === "unused");
   listTitle.textContent = copy.title;
@@ -150,7 +405,11 @@ function updateSegmentCopy(status) {
 function updatePageControls() {
   const page = pageState[currentStatus];
   const totalPage = Math.max(1, totalPages[currentStatus]);
-  pageInfo.textContent = `第 ${page} / ${totalPage} 页（共 ${totalCounts[currentStatus]} 条）`;
+  pageInfo.textContent = t("pageInfo", {
+    page,
+    total: totalPage,
+    count: totalCounts[currentStatus],
+  });
 
   prevPageBtn.disabled = page <= 1;
   nextPageBtn.disabled = page >= totalPage || totalPage === 0;
@@ -184,6 +443,7 @@ async function refreshCounts() {
   }
 
   updatePageControls();
+  updatePills();
 }
 
 async function loadCdkeys(status, page = 1) {
@@ -216,7 +476,7 @@ async function loadCdkeys(status, page = 1) {
   if (!data.length) {
     const emptyRow = document.createElement("tr");
     emptyRow.classList.add("empty-row");
-    emptyRow.innerHTML = `<td colspan="6">${statusCopy[status].empty}</td>`;
+    emptyRow.innerHTML = `<td colspan="6">${getStatusCopy(status).empty}</td>`;
     cdkeyTableBody.appendChild(emptyRow);
   } else {
     data.forEach((row) => {
@@ -242,6 +502,7 @@ async function loadCdkeys(status, page = 1) {
   }
 
   updatePageControls();
+  updatePills();
 }
 
 function switchStatus(status) {
