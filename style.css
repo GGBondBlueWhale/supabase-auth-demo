@@ -110,9 +110,8 @@ body.app-body {
 
 .glass {
   background: var(--panel);
+  background: color-mix(in srgb, var(--panel) 88%, #0b1222 12%);
   border: 1px solid var(--panel-border);
-  backdrop-filter: blur(24px) saturate(150%);
-  -webkit-backdrop-filter: blur(24px) saturate(150%);
   box-shadow: var(--shadow-soft);
   transition: background 0.35s ease, border-color 0.3s ease, transform 0.25s ease,
     box-shadow 0.3s ease;
@@ -122,6 +121,16 @@ body.app-body {
   background: color-mix(in srgb, var(--panel) 88%, var(--panel-hover));
   transform: translateY(-2px);
   box-shadow: 0 24px 60px rgba(6, 12, 30, 0.35);
+}
+
+/* 可选的毛玻璃效果：在某些设备/驱动上会导致 DevTools 打开时 GPU 崩溃，这里降级为软透明，
+   只有浏览器明确支持 backdrop-filter 时才启用，避免再触发崩溃。 */
+@supports ((backdrop-filter: blur(14px)) or (-webkit-backdrop-filter: blur(14px))) {
+  .glass {
+    backdrop-filter: blur(14px) saturate(130%);
+    -webkit-backdrop-filter: blur(14px) saturate(130%);
+    background: color-mix(in srgb, var(--panel) 80%, rgba(255, 255, 255, 0.04));
+  }
 }
 
 .logo {
