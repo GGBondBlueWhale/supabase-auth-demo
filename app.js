@@ -504,8 +504,7 @@ redeemForm?.addEventListener("submit", async (e) => {
   }
   redeemStatus.style.color = "#22c55e";
 
-  await loadSubscription();
-  await loadRedeemHistory();
+  await refreshCurrentUserData(true); // 成功兑换后立即刷新订阅与历史
 });
 
 // UI 渲染函数
@@ -528,6 +527,28 @@ function renderLoggedOut() {
   syncAuthFormHeight();
 }
 
+// 统一刷新当前登录用户的订阅状态与兑换记录
+async function refreshCurrentUserData(forceFetchUser = false) {
+  if (forceFetchUser || !currentUser) {
+    const { data, error } = await supabase.auth.getUser();
+    if (error || !data.user) {
+      console.warn("refreshCurrentUserData: no current user", error);
+      renderLoggedOut();
+      return;
+    }
+    currentUser = data.user;
+  }
+
+  if (currentUser) {
+    userEmailSpan.textContent = currentUser.email ?? "";
+    profileEmail.textContent = currentUser.email ?? "";
+    profileId.textContent = currentUser.id ?? "";
+  }
+
+  await loadSubscription();
+  await loadRedeemHistory();
+}
+
 async function renderLoggedIn(user) {
   currentUser = user;
 
@@ -539,8 +560,7 @@ async function renderLoggedIn(user) {
   profileEmail.textContent = user.email ?? "";
   profileId.textContent = user.id ?? "";
 
-  await loadSubscription();
-  await loadRedeemHistory();
+  await refreshCurrentUserData();
   playSectionFade(dashboardSection);
 }
 
