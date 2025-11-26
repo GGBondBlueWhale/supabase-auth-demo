@@ -881,11 +881,13 @@ function formatSubscription(sub) {
   };
 }
 
+// 加载管理员左侧的用户列表，基于 profiles 表 + 最新订阅信息
 async function loadUsers(page = 1) {
   userPage = page;
   let query = supabase
     .from("profiles")
     .select("id, email, is_admin, created_at", { count: "exact" })
+    .not("email", "is", null)
     .order("created_at", { ascending: false })
     .range((page - 1) * USER_PAGE_SIZE, page * USER_PAGE_SIZE - 1);
 
@@ -912,7 +914,12 @@ async function loadUsers(page = 1) {
       .select("user_id, plan, expire_at")
       .in("user_id", ids)
       .order("expire_at", { ascending: false });
-    subMap = new Map(subs?.map((s) => [s.user_id, s]));
+    subMap = new Map();
+    subs?.forEach((s) => {
+      if (!subMap.has(s.user_id)) {
+        subMap.set(s.user_id, s); // 只保留每个用户最新的一条订阅
+      }
+    });
   }
 
   if (userTableBody) userTableBody.innerHTML = "";
@@ -935,10 +942,12 @@ async function loadUsers(page = 1) {
   renderAssignUserList(assignEmailInput?.value?.trim() || "");
 }
 
+// 弹窗选择用户列表，和主列表一样基于 profiles + 最新订阅
 async function loadAssignableUsers() {
   const { data, error } = await supabase
     .from("profiles")
-    .select("id, email, is_admin, created_at, subscriptions(plan, expire_at)")
+    .select("id, email, is_admin, created_at")
+    .not("email", "is", null)
     .order("created_at", { ascending: false })
     .limit(50);
 
@@ -947,8 +956,24 @@ async function loadAssignableUsers() {
     return;
   }
 
+  const ids = data?.map((u) => u.id) || [];
+  const subMap = new Map();
+  if (ids.length) {
+    const { data: subs } = await supabase
+      .from("subscriptions")
+      .select("user_id, plan, expire_at")
+      .in("user_id", ids)
+      .order("expire_at", { ascending: false });
+
+    subs?.forEach((s) => {
+      if (!subMap.has(s.user_id)) {
+        subMap.set(s.user_id, s);
+      }
+    });
+  }
+
   assignableUsers = (data || []).map((user) => {
-    const sub = user.subscriptions?.[0];
+    const sub = subMap.get(user.id);
     return { ...user, subscription: formatSubscription(sub) };
   });
 
@@ -991,6 +1016,32 @@ async function loadUserDetail(user) {
       <ul class="bullets">${redeemList.join("") || "<li>暂无记录</li>"}</ul>
     </div>
   `;
+}
+
+// 重新获取选中用户的 profile + 详情，确保右侧数据最新
+async function reloadUserDetail(userId = selectedUser?.id) {
+  if (!userId) return;
+  const { data: profile, error } = await supabase
+    .from("profiles")
+    .select("id, email, is_admin")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("reloadUserDetail profile error", error);
+  }
+
+  const merged = profile || selectedUser;
+  if (merged) {
+    selectedUser = { ...selectedUser, ...merged };
+    await loadUserDetail(selectedUser);
+  }
+}
+
+// 刷新左侧用户列表（含搜索和分页状态）
+async function reloadUserList() {
+  await loadUsers(userPage);
+  await loadAssignableUsers();
 }
 
 async function selectUser(user) {
@@ -1117,7 +1168,8 @@ adminRedeemForm?.addEventListener("submit", async (e) => {
     await redeemCdkeyForUser(selectedUser.id, code);
     adminRedeemStatus.textContent = `已为 ${selectedUser.email} 成功兑换 1 个 CDKey`;
     adminRedeemInput.value = "";
-    await loadUserDetail(selectedUser);
+    await reloadUserDetail(selectedUser.id); // 成功后立即刷新右侧详情
+    await reloadUserList(); // 同步左侧列表中的订阅状态
     await refreshCounts();
     await Promise.all([
       loadCdkeys("unused", pageState.unused),
@@ -1186,8 +1238,9 @@ assignForm?.addEventListener("submit", async (e) => {
       loadAdminAnalytics(),
     ]);
     if (selectedUser && (selectedUser.id === targetId || selectedUser.email === email)) {
-      await loadUserDetail(selectedUser);
+      await reloadUserDetail(selectedUser.id); // 分配成功后刷新右侧数据
     }
+    await reloadUserList(); // 刷新左侧列表，保持订阅/到期时间同步
   } catch (err) {
     console.error("assign_cdkeys_to_user failed", err);
     if (assignStatus) assignStatus.textContent = err.message || "分配失败";
