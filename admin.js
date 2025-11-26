@@ -432,6 +432,11 @@ const userDetailBody = document.getElementById("user-detail-body");
 const adminRedeemForm = document.getElementById("admin-redeem-form");
 const adminRedeemInput = document.getElementById("admin-redeem-code");
 const adminRedeemStatus = document.getElementById("admin-redeem-status");
+const workbenchPrevBtn = document.getElementById("workbench-prev");
+const workbenchNextBtn = document.getElementById("workbench-next");
+const workbenchPageInfo = document.getElementById("workbench-page-info");
+const workbenchPages = document.querySelectorAll(".workbench-page");
+const pagerButtons = document.querySelectorAll(".pager-btn");
 const bulkDeleteBtn = document.getElementById("bulk-delete");
 const bulkAssignBtn = document.getElementById("bulk-assign");
 const selectAllCheckbox = document.getElementById("select-all");
@@ -458,6 +463,7 @@ const totalCounts = { unused: 0, used: 0 };
 const USER_PAGE_SIZE = 10;
 let userPage = 1;
 let totalUserPages = 1;
+let workbenchIndex = 0;
 let userSearchTerm = "";
 let selectedUser = null;
 let selectedCodes = new Set();
@@ -707,6 +713,35 @@ function updatePageControls() {
 
   prevPageBtn.disabled = page <= 1;
   nextPageBtn.disabled = page >= totalPage || totalPage === 0;
+}
+
+function updateWorkbenchControls() {
+  const total = workbenchPages.length || 1;
+  const current = workbenchIndex + 1;
+  if (workbenchPageInfo) workbenchPageInfo.textContent = `第 ${current} / ${total} 页`;
+  if (workbenchPrevBtn) workbenchPrevBtn.disabled = current <= 1;
+  if (workbenchNextBtn) workbenchNextBtn.disabled = current >= total;
+}
+
+function setWorkbenchPage(targetId) {
+  const pages = Array.from(workbenchPages);
+  const target = pages.find((page) => page.id === targetId) || pages[workbenchIndex];
+  if (!target) return;
+
+  pages.forEach((page, index) => {
+    const isActive = page === target;
+    page.classList.toggle("active", isActive);
+    page.setAttribute("aria-hidden", isActive ? "false" : "true");
+    if (isActive) workbenchIndex = index;
+  });
+
+  pagerButtons.forEach((btn) => {
+    const isActive = btn.dataset.target === target.id;
+    btn.classList.toggle("active", isActive);
+    btn.setAttribute("aria-selected", isActive ? "true" : "false");
+  });
+
+  updateWorkbenchControls();
 }
 
 async function refreshCounts() {
@@ -1144,6 +1179,22 @@ userNextBtn?.addEventListener("click", () => {
   if (userPage < totalUserPages) loadUsers(userPage + 1);
 });
 
+pagerButtons.forEach((btn) => {
+  btn.addEventListener("click", () => {
+    if (btn.dataset.target) setWorkbenchPage(btn.dataset.target);
+  });
+});
+
+workbenchPrevBtn?.addEventListener("click", () => {
+  const pages = Array.from(workbenchPages);
+  if (workbenchIndex > 0) setWorkbenchPage(pages[workbenchIndex - 1].id);
+});
+
+workbenchNextBtn?.addEventListener("click", () => {
+  const pages = Array.from(workbenchPages);
+  if (workbenchIndex < pages.length - 1) setWorkbenchPage(pages[workbenchIndex + 1].id);
+});
+
 userSearchInput?.addEventListener(
   "input",
   debounce((e) => {
@@ -1344,6 +1395,12 @@ async function toggleAssignModal(show) {
     renderAssignUserList(assignEmailInput?.value?.trim() || "");
     assignEmailInput?.focus();
   }
+}
+
+if (workbenchPages.length) {
+  setWorkbenchPage(workbenchPages[0].id);
+} else {
+  updateWorkbenchControls();
 }
 
 // 退出登录
