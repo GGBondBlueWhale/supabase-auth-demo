@@ -22,6 +22,10 @@
   --input-border: rgba(255, 255, 255, 0.08);
   --input-shadow: rgba(90, 200, 250, 0.28);
   --ease-out-apple: cubic-bezier(0.25, 0.8, 0.25, 1);
+  --ease-spring-soft: cubic-bezier(0.18, 0.89, 0.32, 1.28);
+  --ease-fluid: cubic-bezier(0.22, 0.67, 0.26, 0.99);
+  --duration-fast: 160ms;
+  --duration-medium: 240ms;
   --layer-raise: 0 18px 48px rgba(5, 10, 30, 0.4);
   --chart-axis-color: var(--text-sub);
   --chart-grid-color: rgba(255, 255, 255, 0.1);
@@ -72,6 +76,10 @@ body.app-body {
   transition: background 0.5s var(--ease-out-apple), color 0.35s ease;
 }
 
+body {
+  -webkit-font-smoothing: antialiased;
+}
+
 .bg-gradient {
   position: fixed;
   inset: 0;
@@ -82,6 +90,17 @@ body.app-body {
   z-index: -1;
   animation: floaty 24s ease-in-out infinite alternate;
   transition: transform 0.4s var(--ease-out-apple), opacity 0.3s ease;
+}
+
+.bg-gradient::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 72% 32%, rgba(255, 255, 255, 0.06), transparent 32%);
+  opacity: 0.6;
+  filter: blur(40px);
+  pointer-events: none;
+  transition: opacity var(--duration-medium) var(--ease-fluid);
 }
 
 .top-bar {
@@ -102,6 +121,11 @@ body.app-body {
     transform 0.25s var(--ease-out-apple), opacity 0.3s ease;
 }
 
+.top-bar:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 50px rgba(5, 12, 36, 0.32);
+}
+
 .top-bar.is-floating {
   box-shadow: var(--layer-raise);
   transform: translateY(-4px);
@@ -120,8 +144,8 @@ body.app-body {
 
 .glass:hover {
   background: color-mix(in srgb, var(--panel) 88%, var(--panel-hover));
-  transform: translateY(-2px);
-  box-shadow: 0 24px 60px rgba(6, 12, 30, 0.35);
+  transform: translateY(-4px);
+  box-shadow: 0 28px 68px rgba(6, 12, 30, 0.32);
 }
 
 .logo {
@@ -238,6 +262,12 @@ body:not(.app-initializing) #dashboard-section {
     var(--panel-strong);
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: var(--shadow-soft);
+  transition: transform var(--duration-medium) var(--ease-spring-soft), box-shadow var(--duration-medium) ease;
+}
+
+.auth-hero:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 28px 64px rgba(8, 16, 38, 0.36);
 }
 
 .auth-hero h1 {
@@ -320,13 +350,18 @@ body:not(.app-initializing) #dashboard-section {
   font-weight: 600;
   border-radius: 12px;
   cursor: pointer;
-  transition: all 0.2s ease, color 0.2s ease;
+  transition: all var(--duration-fast) var(--ease-fluid), color var(--duration-fast) ease;
 }
 
 .tab.active {
   background: linear-gradient(135deg, rgba(79, 195, 247, 0.22), rgba(111, 124, 255, 0.2));
   color: #fff;
   box-shadow: 0 12px 28px rgba(79, 195, 247, 0.25);
+}
+
+.tab:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  outline-offset: 2px;
 }
 
 .auth-forms {
@@ -345,7 +380,7 @@ body:not(.app-initializing) #dashboard-section {
   opacity: 0;
   transform: translateX(12px) scale(0.99);
   pointer-events: none;
-  transition: opacity 0.22s var(--ease-out-apple), transform 0.22s var(--ease-out-apple);
+  transition: opacity var(--duration-medium) var(--ease-fluid), transform var(--duration-medium) var(--ease-fluid);
 }
 
 .auth-form.active {
@@ -388,8 +423,8 @@ input[type="number"] {
   outline: none;
   font-size: 15px;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  transition: border 0.18s var(--ease-out-apple), box-shadow 0.2s ease,
-    background 0.22s ease, transform 0.16s var(--ease-out-apple);
+  transition: border var(--duration-fast) var(--ease-fluid), box-shadow var(--duration-medium) ease,
+    background var(--duration-medium) ease, transform var(--duration-fast) var(--ease-spring-soft);
 }
 
 .auth-input {
@@ -404,7 +439,15 @@ input[type="number"] {
 input:focus {
   border-color: var(--accent);
   box-shadow: 0 12px 28px var(--input-shadow), 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
-  transform: translateY(-1px);
+  transform: translateY(-1.5px) scale(1.002);
+}
+
+input::placeholder {
+  color: color-mix(in srgb, var(--text-sub) 82%, transparent);
+}
+
+input:focus-visible {
+  outline: none;
 }
 
 .primary-btn,
@@ -417,8 +460,9 @@ input:focus {
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.16s var(--ease-out-apple), box-shadow 0.16s ease,
-    background 0.18s ease, filter 0.18s ease;
+  transition: transform var(--duration-fast) var(--ease-spring-soft), box-shadow var(--duration-medium) ease,
+    background var(--duration-medium) ease, filter var(--duration-fast) ease, border-color var(--duration-fast) ease;
+  will-change: transform;
 }
 
 .primary-btn {
@@ -428,15 +472,15 @@ input:focus {
 }
 
 .primary-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 18px 38px color-mix(in srgb, var(--accent) 55%, transparent);
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 20px 40px color-mix(in srgb, var(--accent) 55%, transparent);
 }
 
 .primary-btn:active,
 .secondary-btn:active,
 .ghost-btn:active {
-  transform: translateY(0) scale(0.97);
-  filter: brightness(1.02);
+  transform: translateY(0) scale(0.985);
+  filter: brightness(1.03);
 }
 
 .secondary-btn {
@@ -445,10 +489,22 @@ input:focus {
   border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
 }
 
+.secondary-btn:hover {
+  transform: translateY(-1px);
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  box-shadow: 0 12px 30px rgba(0, 122, 255, 0.18);
+}
+
 .ghost-btn {
   background: color-mix(in srgb, var(--panel) 65%, var(--frost));
   color: var(--text-main);
   border: 1px solid var(--panel-border);
+}
+
+.ghost-btn:hover {
+  background: color-mix(in srgb, var(--panel) 65%, var(--panel-hover));
+  transform: translateY(-1px);
+  box-shadow: 0 14px 34px rgba(6, 12, 30, 0.25);
 }
 
 .icon-btn {
@@ -465,13 +521,31 @@ input:focus {
 }
 
 .icon-btn:hover {
-  transform: translateY(-1px) scale(1.02);
+  transform: translateY(-1.5px) scale(1.04);
   background: color-mix(in srgb, var(--panel) 70%, var(--panel-hover));
 }
 
 .icon-btn:active {
   transform: translateY(0) scale(0.96);
   filter: brightness(1.05);
+}
+
+.icon-btn:focus-visible,
+.primary-btn:focus-visible,
+.secondary-btn:focus-visible,
+.ghost-btn:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
 }
 
 .icon-btn .theme-icon {
@@ -687,6 +761,12 @@ input:focus {
   border-radius: 14px;
   background: color-mix(in srgb, var(--panel) 70%, var(--frost));
   border: 1px solid var(--panel-border);
+  transition: transform var(--duration-medium) var(--ease-spring-soft), box-shadow var(--duration-medium) ease;
+}
+
+.history-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 18px 44px rgba(8, 16, 36, 0.3);
 }
 
 .history-main {
